@@ -33,16 +33,6 @@ public class PlayerMovement : MonoBehaviour
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
 
-        playerDiesTest();
-
     }
 
-    public void playerDiesTest()
-    {
-        if(Input.GetKeyDown(KeyCode.P))
-        {
-            Debug.Log("Player has died. Loading defeat scene...");
-           SceneManager.LoadScene("EscenaDerrota");
-        }
-    }
 }

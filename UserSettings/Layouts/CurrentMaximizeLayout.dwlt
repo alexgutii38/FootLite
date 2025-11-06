@@ -26,7 +26,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 100}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 0
-  controlID: 22807
+  controlID: 40057
   draggingID: 0
 --- !u!114 &2
 MonoBehaviour:
@@ -155,7 +155,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 22717
+  controlID: 39970
   draggingID: 0
 --- !u!114 &4
 MonoBehaviour:
@@ -539,6 +539,20 @@ MonoBehaviour:
       layout: 4
       size: {x: 0, y: 0}
       sizeOverridden: 0
+    - dockPosition: 1
+      containerId: overlay-container--right
+      displayed: 0
+      id: AINavigationOverlay
+      index: 11
+      contents: '{"m_Layout":4,"m_Collapsed":false,"m_Folded":false,"m_Floating":false,"m_FloatingSnapOffset":{"x":0.0,"y":0.0},"m_SnapOffsetDelta":{"x":0.0,"y":0.0},"m_FloatingSnapCorner":0,"m_Size":{"x":0.0,"y":0.0},"m_SizeOverridden":false}'
+      floating: 0
+      collapsed: 0
+      snapOffset: {x: 0, y: 0}
+      snapOffsetDelta: {x: 0, y: 0}
+      snapCorner: 0
+      layout: 4
+      size: {x: 0, y: 0}
+      sizeOverridden: 0
     m_ContainerData:
     - containerId: overlay-toolbar__top
       scrollOffset: 0
@@ -566,9 +580,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 1127.3796, y: 555.2215, z: 58.48565}
+    m_Target: {x: 1484.6191, y: 2.3330245, z: -10047.3}
     speed: 2
-    m_Value: {x: 1127.3796, y: 555.2215, z: 58.48565}
+    m_Value: {x: 1484.6191, y: 2.3330245, z: -10047.3}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -614,13 +628,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: 0.00045879855, y: 0.99948716, z: -0.027302414, w: 0.016793927}
+    m_Target: {x: -0.010808407, y: 0.014095675, z: -0.00015236768, w: -0.9998439}
     speed: 2
-    m_Value: {x: 0.00045879805, y: 0.9994861, z: -0.027302384, w: 0.016793909}
+    m_Value: {x: -0.01080839, y: 0.014095652, z: -0.00015236743, w: -0.9998422}
   m_Size:
-    m_Target: 598.45886
+    m_Target: 10
     speed: 2
-    m_Value: 598.45886
+    m_Value: 10
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -699,8 +713,8 @@ MonoBehaviour:
     y: 0
     width: 301
     height: 933
-  m_MinSize: {x: 202, y: 226}
-  m_MaxSize: {x: 4002, y: 4026}
+  m_MinSize: {x: 200, y: 200}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 8}
   m_Panes:
   - {fileID: 8}
@@ -747,7 +761,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 12a3ffff5ea5ffffd8a5ffff3aadffffbeadffff02b0ffff70e7ffff08e9ffff20eaffff7cecffff10eeffff38f0ffff0ef1ffffb2f1ffff10f7ffff1afbffffc88e0000f48e00006e8f00002496000030960000aa960000d69600008a970000749d0000a09d00001a9e0000a89f00007aa90000
+      m_ExpandedIDs: aa75ffff149bffff189bffff54a0ffff12a3ffff5ea5ffffd8a5ffff3aadffffbeadffff02b0ffff70e7ffff08e9ffff20eaffff7cecffff10eeffff38f0ffff0ef1ffffb2f1ffff10f7ffff1afbffffc88e0000f48e00006e8f00002496000030960000aa960000d69600008a970000749d0000a09d00001a9e0000a89f00007aa90000beae0000e8ae0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -764,7 +778,7 @@ MonoBehaviour:
         m_OriginalEventType: 11
         m_IsRenamingFilename: 0
         m_TrimLeadingAndTrailingWhitespace: 0
-        m_ClientGUIView: {fileID: 4}
+        m_ClientGUIView: {fileID: 7}
       m_SearchString: 
     m_ExpandedScenes: []
     m_CurrenRootInstanceID: 0
@@ -789,7 +803,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 1154
     y: 0
-    width: 313
+    width: 314
     height: 933
   m_MinSize: {x: 230, y: 250}
   m_MaxSize: {x: 10000, y: 10000}
@@ -821,7 +835,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 1154
     y: 79
-    width: 311
+    width: 312
     height: 907
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -845,7 +859,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Scenes
+    - Assets/Prefabs
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -863,7 +877,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: b0230000
     m_LastClickedID: 9136
-    m_ExpandedIDs: ffffffff00000000c80100008e8c0000e48d0000e68d0000e88d0000ea8d0000ec8d0000ee8d0000f08d0000f28d0000f48d0000548e0000b48f0000b68f0000
+    m_ExpandedIDs: 6c90ffffffffffff00000000c80100008e8c0000e48d0000e68d0000e88d0000ea8d0000ec8d0000ee8d0000f08d0000f28d0000f48d0000548e0000b48f0000b68f000030af0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -889,24 +903,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_AssetTreeState:
-    scrollPos: {x: 0, y: 0}
+    scrollPos: {x: 0, y: 71}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: ffffffff00000000c80100008e8c0000e48d0000e68d0000e88d0000ea8d0000ec8d0000ee8d0000f08d0000f28d0000f48d0000548e0000b48f0000b68f0000
+    m_ExpandedIDs: 6c90ffffffffffff00000000c80100008e8c0000e48d0000e68d0000e88d0000ea8d0000ec8d0000ee8d0000f08d0000f28d0000f48d0000548e0000b48f0000b68f000030af0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: EscenaDerrota
-      m_OriginalName: EscenaDerrota
+      m_Name: 
+      m_OriginalName: 
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 36432
+      m_UserData: 0
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 0
+      m_OriginalEventType: 11
       m_IsRenamingFilename: 1
       m_TrimLeadingAndTrailingWhitespace: 0
       m_ClientGUIView: {fileID: 9}
@@ -948,9 +962,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 1467
+    x: 1468
     y: 0
-    width: 453
+    width: 452
     height: 933
   m_MinSize: {x: 275, y: 50}
   m_MaxSize: {x: 4000, y: 4000}
@@ -980,9 +994,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1467
+    x: 1468
     y: 79
-    width: 452
+    width: 451
     height: 907
   m_SerializedDataModeController:
     m_DataMode: 0
