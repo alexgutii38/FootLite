@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class PlayerMovement : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -33,7 +33,16 @@ public class PlayerMovement : MonoBehaviour
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
 
+        playerDiesTest();
 
+    }
 
+    public void playerDiesTest()
+    {
+        if(Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Log("Player has died. Loading defeat scene...");
+           SceneManager.LoadScene("EscenaDerrota");
+        }
     }
 }
