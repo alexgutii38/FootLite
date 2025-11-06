@@ -18,11 +18,6 @@ public class MainMenu : MonoBehaviour
         optionsMenu.SetActive(false);
     }
 
-    public void QuitGame()
-    {
-        Application.Quit();
-    }
-
     public void PlayGame()
     {
         SceneManager.LoadScene("EscenaCampo");
