@@ -5,7 +5,9 @@ public class EnemigoCaminante : MonoBehaviour
     public int danoPorContacto = 10;           // Daño que causa al jugador
     public float tiempoEntreDanos = 1f;        // Tiempo entre daños para que no quite vida continuamente sin pausa
     public float velocidadMovimiento = 3f;    // Velocidad a la que se mueve el enemigo
-    public float rangoDeteccion = 50f;        // Rango de detección para empezar a perseguir
+    public float rangoDeteccion = 50f;
+    
+    private float alturaInicial;
 
     private Transform jugador;
     private float tiempoUltimoDano;
@@ -15,8 +17,8 @@ public class EnemigoCaminante : MonoBehaviour
     {
         jugador = GameObject.FindGameObjectWithTag("Player").transform;
         rb = GetComponent<Rigidbody>();
-        // Opcional: Si no quieres usar física para el movimiento
-        // Puedes hacerlo con transform.position += ...
+        alturaInicial = transform.position.y;
+        
     }
 
     void Update()
@@ -49,6 +51,34 @@ public class EnemigoCaminante : MonoBehaviour
             if (rb != null)
                 rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
+
+        Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));
+        foreach (Collider col in vecinos)
+        {
+            if (col.gameObject != this.gameObject)
+            {
+                Vector3 separacion = (transform.position - col.transform.position).normalized;
+                transform.position += separacion * 0.15f;
+            }
+        }
+
+        //Separacion de jugador con enemigos
+        if (jugador != null)
+        {
+            float distaciaJugador = Vector3.Distance(transform.position, jugador.position);
+            float distanciaMinima = 1f; // Distancia mínima deseada entre el enemigo y el jugador
+
+            if (distaciaJugador < distanciaMinima)
+            {
+                Vector3 direccionSeparacion = (transform.position - jugador.position).normalized;
+                transform.position += direccionSeparacion * 0.15f;
+            }
+        }
+
+        //Manterner altura constante
+        Vector3 posicionY = transform.position;
+        posicionY.y = alturaInicial;
+        transform.position = posicionY;
     }
 
     void OnTriggerStay(Collider other)

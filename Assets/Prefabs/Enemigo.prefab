@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -3794195496382938945}
   - component: {fileID: 7198977543052182355}
   - component: {fileID: -4034138905577982243}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Enemigo
   m_TagString: Enemigo
   m_Icon: {fileID: 0}
@@ -107,7 +107,7 @@ Halo:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1061924988093087196}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Color:
     serializedVersion: 2
     rgba: 4278245375
@@ -123,7 +123,7 @@ GameObject:
   - component: {fileID: 7274576985957590520}
   - component: {fileID: 6314669237935535837}
   - component: {fileID: 7413305927884437367}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -212,7 +212,7 @@ GameObject:
   - component: {fileID: 3622329498685417133}
   - component: {fileID: 3251785254603119543}
   - component: {fileID: 4642287065390404755}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
