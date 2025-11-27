@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class CambiarEscenas : MonoBehaviour
 {
@@ -7,7 +8,7 @@ public class CambiarEscenas : MonoBehaviour
     public void CambiarJuego()
     {
         SceneManager.LoadScene("EscenaCampo");
-        
+        StartCoroutine(IniciarPartida());
     }
 
     public void CambiarTitulo()
@@ -19,5 +20,14 @@ public class CambiarEscenas : MonoBehaviour
     public void CambiarDerrota()
     {
        SceneManager.LoadScene("EscenaDerrota");
+    }
+    
+    IEnumerator IniciarPartida()
+    {
+        yield return null;
+        GameManager.Instancia.ReiniciarContadores();
+        GameManager.Instancia.ReiniciarValores();
+        GameManager.Instancia.ActualizarUI();
+        
     }
 }

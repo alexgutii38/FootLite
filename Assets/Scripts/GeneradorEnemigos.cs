@@ -1,53 +1,74 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 public class GeneradorEnemigos : MonoBehaviour
 {
-    [Header("Prefab de Enemigo")]
+    [Header("Prefabs y parámetros base")]
     public GameObject enemigoPrefab;
+    public float radioGeneracion = 12f;
 
-    [Header("Configuración de Generación")]
-    public int cantidadEnemigos = 5;
-    public float radioGeneracion = 15f;
-    public float intervaloGeneracion = 3f;
+    [Header("Spawn y progresión")]
+    public int cantidadBase = 2;
+    public float intervaloBase = 12f;
+    public float intervaloMin = 2.3f;
+    public int incrementoEnemigos = 1;
+    public float reduccionIntervalo = 0.55f;
 
+    [Header("Escalado vida y velocidad")]
+    public float vidaBase = 50f;
+    public float vidaPorMinuto = 30f;
+    public float velocidadBase = 3f;
+    public float velocidadPorMinuto = 1f;
+
+    private float intervaloActual;
+    private int cantidadActual;
     private Transform jugador;
     private float tiempoUltimaGeneracion;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        
         jugador = GameObject.FindGameObjectWithTag("Player").transform;
-
+        cantidadActual = cantidadBase;
+        intervaloActual = intervaloBase;
         GenerarOleada();
         tiempoUltimaGeneracion = Time.time;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (Time.time > tiempoUltimaGeneracion + intervaloGeneracion)
+        if (Time.time > tiempoUltimaGeneracion + intervaloActual)
         {
             GenerarOleada();
             tiempoUltimaGeneracion = Time.time;
+            cantidadActual += incrementoEnemigos;
+            intervaloActual -= reduccionIntervalo;
+            if (intervaloActual < intervaloMin)
+                intervaloActual = intervaloMin;
         }
     }
 
     void GenerarOleada()
     {
-        for (int i = 0; i < cantidadEnemigos; i++)
+        float minutos = Time.timeSinceLevelLoad / 60f;
+        float vidaEscalada = vidaBase + vidaPorMinuto * minutos;
+        float velocidadEscalada = velocidadBase + velocidadPorMinuto * minutos;
+
+        for (int i = 0; i < cantidadActual; i++)
         {
-            float angulo = (360f / cantidadEnemigos) * i;
+            float angulo = Random.Range(0, 360f) * Mathf.Deg2Rad;
+            float x = jugador.position.x + radioGeneracion * Mathf.Cos(angulo);
+            float z = jugador.position.z + radioGeneracion * Mathf.Sin(angulo);
+            Vector3 posicion = new Vector3(x, 1.2f, z);
 
-            float anguloRad = angulo * Mathf.Deg2Rad;
+            GameObject enemigo = Instantiate(enemigoPrefab, posicion, Quaternion.identity);
 
-            float x = jugador.position.x + radioGeneracion * Mathf.Cos(anguloRad);
-            float z = jugador.position.z + radioGeneracion * Mathf.Sin(anguloRad);
-
-            Vector3 posicionGeneracion = new Vector3(x, 0f, z);
-
-            Instantiate(enemigoPrefab, posicionGeneracion, Quaternion.identity);
+            // Pasa stats al componente EnemigoCaminante
+            EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
+            if (script != null)
+            {
+                script.vida = vidaEscalada;
+                script.velocidadMovimiento = velocidadEscalada;
+            }
         }
     }
 }

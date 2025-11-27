@@ -1,22 +1,33 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 public class PlayerMovement : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public CharacterController controller;
 
-    public float speed = 5.0f;
+    private PlayerStats playerStats;
+    private float speed;
 
     public float turnSmoothTime = 0.1f;
     private float turnSmoothVelocity;
-
     public Transform cam;
+    private Rigidbody rb;
+   
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        playerStats = GetComponent<PlayerStats>();
+        speed = playerStats.speed;
+    }
 
     // Update is called once per frame
     void Update()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
+
 
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
@@ -33,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
 
-    }
+        
 
+    }
 }

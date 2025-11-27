@@ -22,5 +22,6 @@ public class MainMenu : MonoBehaviour
     {
         SceneManager.LoadScene("EscenaCampo");
     }
+    
 }
 

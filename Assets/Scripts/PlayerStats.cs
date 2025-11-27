@@ -1,14 +1,24 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
+
 
 public class PlayerStats : MonoBehaviour
 {
+    
     [Header("Vida del Jugador")]
+    
     public int vidaMaxima = 100;
     public int vidaActual;
+    public float speed = 5.0f;
 
+    public float dañoProyectil = 20f;
 
+    public float rangoDisparo = 15f;
+    public float cadenciaDisparo = 5f; 
+
+    public int cantidadDirecciones = 0; // 0 = solo hacia enemigos, >0 = modo circular
+
+    public float velocidadProyectil = 10f;
     void Start()
     {
         vidaActual = vidaMaxima;
@@ -18,18 +28,20 @@ public class PlayerStats : MonoBehaviour
     public void RecibirDano(int dano)
     {
         vidaActual -= dano;
-        Debug.Log("El jugador a recibido daño. Vida actual: " + vidaActual);
-        if (vidaActual <= 0)
+        if (vidaActual < 0)
+            vidaActual = 0;
+
+        if (GameManager.Instancia != null)
         {
-            Morir();
+            GameManager.Instancia.ActualizarUI();
+            if (vidaActual <= 0)
+            {
+                GameManager.Instancia.GameOver();
+            }
         }
     }
 
-    void Morir()
-    {
-        Debug.Log("El jugador ha muerto.");
-        SceneManager.LoadScene("EscenaDerrota");
-    }
+
 
     public int ObtenerVidaActual()
     {

@@ -1,14 +1,20 @@
 using UnityEngine;
 
+
 public class EnemigoCaminante : MonoBehaviour
 {
-    public int danoPorContacto = 10;           // Daño que causa al jugador
-    public float tiempoEntreDanos = 1f;        // Tiempo entre daños para que no quite vida continuamente sin pausa
-    public float velocidadMovimiento = 3f;    // Velocidad a la que se mueve el enemigo
+    // ==== NUEVO ====
+    [Header("Atributos escalables")]
+    public float vida = 50f;
+    public float velocidadMovimiento = 3f;
+    // ===============
+
+    public int danoPorContacto = 10;
+    public float tiempoEntreDanos = 0.5f;
     public float rangoDeteccion = 50f;
+
     
     private float alturaInicial;
-
     private Transform jugador;
     private float tiempoUltimoDano;
     private Rigidbody rb;
@@ -18,7 +24,6 @@ public class EnemigoCaminante : MonoBehaviour
         jugador = GameObject.FindGameObjectWithTag("Player").transform;
         rb = GetComponent<Rigidbody>();
         alturaInicial = transform.position.y;
-        
     }
 
     void Update()
@@ -29,7 +34,6 @@ public class EnemigoCaminante : MonoBehaviour
 
         if (distancia <= rangoDeteccion)
         {
-            // Movimiento hacia el jugador
             Vector3 direccion = (jugador.position - transform.position).normalized;
 
             // Rotar para mirar al jugador
@@ -47,11 +51,11 @@ public class EnemigoCaminante : MonoBehaviour
         }
         else
         {
-            // Detenerse si no está en rango
             if (rb != null)
                 rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
 
+        // Separación y altura mantienen igual...
         Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));
         foreach (Collider col in vecinos)
         {
@@ -62,12 +66,10 @@ public class EnemigoCaminante : MonoBehaviour
             }
         }
 
-        //Separacion de jugador con enemigos
         if (jugador != null)
         {
             float distaciaJugador = Vector3.Distance(transform.position, jugador.position);
-            float distanciaMinima = 1f; // Distancia mínima deseada entre el enemigo y el jugador
-
+            float distanciaMinima = 1f;
             if (distaciaJugador < distanciaMinima)
             {
                 Vector3 direccionSeparacion = (transform.position - jugador.position).normalized;
@@ -75,7 +77,7 @@ public class EnemigoCaminante : MonoBehaviour
             }
         }
 
-        //Manterner altura constante
+        // Mantener altura constante
         Vector3 posicionY = transform.position;
         posicionY.y = alturaInicial;
         transform.position = posicionY;
@@ -93,4 +95,18 @@ public class EnemigoCaminante : MonoBehaviour
             }
         }
     }
+
+    // ==== NUEVO ====
+    // Recibir daño y muerte
+    public void RecibirDano(float cantidad)
+    {
+        vida -= cantidad;
+        if (vida <= 0f)
+        {
+            GameManager.Instancia.SumarEliminado();
+            Destroy(gameObject);
+            
+        }
+    }
+    // ===============
 }
