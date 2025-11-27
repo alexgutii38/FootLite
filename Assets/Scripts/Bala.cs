@@ -13,7 +13,7 @@ public class Bala : MonoBehaviour
     {
         PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
         velocidad = stats.velocidadProyectil;
-        dano = stats.dañoProyectil;
+        dano = stats.danoProyectil;
     }
     void Update()
     {

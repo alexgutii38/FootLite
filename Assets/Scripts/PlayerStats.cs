@@ -5,13 +5,22 @@ using System.Collections;
 public class PlayerStats : MonoBehaviour
 {
     
-    [Header("Vida del Jugador")]
     
-    public int vidaMaxima = 100;
+    
+    
     public int vidaActual;
+
+    [Header("Leveling")]
+    public int nivel = 1;
+    public int experienciaActual = 0;
+    public int experienciaSiguienteNivel = 100;
+    public float multiplicadorExperiencia = 1f;
+
+    [Header("Stats del jugador")]
+    public int vidaMaxima = 100;
     public float speed = 5.0f;
 
-    public float dañoProyectil = 20f;
+    public float danoProyectil = 20f;
 
     public float rangoDisparo = 15f;
     public float cadenciaDisparo = 5f; 
@@ -19,9 +28,22 @@ public class PlayerStats : MonoBehaviour
     public int cantidadDirecciones = 0; // 0 = solo hacia enemigos, >0 = modo circular
 
     public float velocidadProyectil = 10f;
+
+    public float suerte = 0f;
+    public float regeneracionVida = 0f;
     void Start()
     {
         vidaActual = vidaMaxima;
+    }
+
+    void Update()
+    {
+        if (regeneracionVida > 0f && vidaActual < vidaMaxima)
+        {
+            vidaActual += Mathf.RoundToInt(regeneracionVida * Time.deltaTime);
+            if (vidaActual > vidaMaxima)
+                vidaActual = vidaMaxima;
+        }
     }
 
     // Update is called once per frame
@@ -46,5 +68,28 @@ public class PlayerStats : MonoBehaviour
     public int ObtenerVidaActual()
     {
         return vidaActual;
+    }
+
+    public void GanarExperiencia(int cantidadBase)
+    {
+        int cantidad = Mathf.RoundToInt(cantidadBase * multiplicadorExperiencia);
+        experienciaActual += cantidad;
+
+        while (experienciaActual >= experienciaSiguienteNivel)
+        {
+            experienciaActual -= experienciaSiguienteNivel;
+            SubirNivel();
+        }
+    }
+
+    void SubirNivel()
+    {
+        nivel++;
+        
+        LevelUpManager manager = FindFirstObjectByType<LevelUpManager>();
+        if (manager != null)
+        {
+            manager.MostrarOpciones(this);
+        }
     }
 }

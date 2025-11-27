@@ -7,13 +7,16 @@ public class EnemigoCaminante : MonoBehaviour
     [Header("Atributos escalables")]
     public float vida = 50f;
     public float velocidadMovimiento = 3f;
+    public int experienciaAlMorir = 20;
+
+    public int experienciaPorGolpe = 5;
     // ===============
 
     public int danoPorContacto = 10;
     public float tiempoEntreDanos = 0.5f;
     public float rangoDeteccion = 50f;
 
-    
+
     private float alturaInicial;
     private Transform jugador;
     private float tiempoUltimoDano;
@@ -100,13 +103,27 @@ public class EnemigoCaminante : MonoBehaviour
     // Recibir daño y muerte
     public void RecibirDano(float cantidad)
     {
+        // 1. XP por golpe
+        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
+        if (ps != null)
+        {
+            ps.GanarExperiencia(experienciaPorGolpe);
+        }
+
+        // 2. Aplicar daño a la vida del enemigo
         vida -= cantidad;
+
+        // 3. Si muere, XP extra por kill
         if (vida <= 0f)
         {
             GameManager.Instancia.SumarEliminado();
+
+            if (ps != null)
+            {
+                ps.GanarExperiencia(experienciaAlMorir);
+            }
+
             Destroy(gameObject);
-            
         }
     }
-    // ===============
 }
