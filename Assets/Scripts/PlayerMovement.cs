@@ -5,8 +5,7 @@ public class PlayerMovement : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public CharacterController controller;
-
-    private PlayerStats playerStats;
+    
     private float speed;
 
     public float turnSmoothTime = 0.1f;
@@ -18,13 +17,13 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        playerStats = GetComponent<PlayerStats>();
-        speed = playerStats.speed;
+        ActualizarStats();
     }
 
     // Update is called once per frame
     void Update()
     {
+        ActualizarStats();
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
@@ -43,8 +42,14 @@ public class PlayerMovement : MonoBehaviour
 
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
+    }
 
-        
-
+    void ActualizarStats()
+    {
+        PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            speed = stats.speed;
+        }
     }
 }

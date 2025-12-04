@@ -1,60 +1,80 @@
 using UnityEngine;
+using System.Collections.Generic;
 
-public enum Raridad 
-{
-    Comun,
-    Raro,
-    Epico,
-    Legendario
-}
+public enum Raridad { Comun, Raro, Epico, Legendario }
 
-public enum TipoMejora
-{
-    VidaMaxima,
-    Daño,
-    Cadencia,
-    VelocidadMovimiento,
-    Rango,
-    Regeneracion,
-    Suerte,
-    Direcciones,
-    VelocidadProyectil,
-
-    VelocidadExp,
-}
 public class LevelUpManager : MonoBehaviour
 {
-    [System.Serializable]
-    public struct OpcionMejora
-    {
-        public TipoMejora tipo;
-        public Raridad raridad;
-    }
-
-    public TMPro.TextMeshProUGUI textoOpcion1;
-    public TMPro.TextMeshProUGUI textoOpcion2;  
-    public TMPro.TextMeshProUGUI textoOpcion3;
-    private OpcionMejora[] opciones = new OpcionMejora[3];
-    private PlayerStats statsActual;
+    [Header("Base de datos de mejoras")]
+    // Arrastra aquí en el Inspector todos tus MejoraConfig (Config_Daño, Config_Vida, etc.)
+    public List<MejoraConfig> mejorasDisponibles;
 
     [Header("UI")]
     public GameObject panelLevelUp;
+    public TMPro.TextMeshProUGUI textoOpcion1;
+    public TMPro.TextMeshProUGUI textoOpcion2;
+    public TMPro.TextMeshProUGUI textoOpcion3;
 
+    // Estructura interna para recordar qué tiene cada botón
+    private struct OpcionGenerada
+    {
+        public MejoraConfig config;
+        public Raridad raridad;
+        public float valorAplicar;
+    }
+
+    private OpcionGenerada[] opciones = new OpcionGenerada[3];
+    private PlayerStats statsJugador;
+
+    // ====== LLAMADO DESDE PlayerStats.SubirNivel() ======
     public void MostrarOpciones(PlayerStats stats)
     {
-        statsActual = stats;
+        statsJugador = stats;
 
+        // Pausar juego
         Time.timeScale = 0f;
-        GameManager.Instancia.juegoEnPausa = true;
+        if (GameManager.Instancia != null)
+            GameManager.Instancia.juegoEnPausa = true;
 
         if (panelLevelUp != null)
             panelLevelUp.SetActive(true);
 
-        for (int i = 0; i < 3; i++)
+        // Generar 3 opciones distintas
+        GenerarOpciones();
+        ActualizarTextoUI();
+    }
+
+    // Genera las 3 opciones (tipo + rareza + valor)
+    void GenerarOpciones()
+    {
+        if (mejorasDisponibles == null || mejorasDisponibles.Count == 0)
         {
-            opciones[i] = GenerarOpcion(statsActual);
+            Debug.LogWarning("LevelUpManager: No hay mejoras configuradas.");
+            return;
         }
 
+        List<MejoraConfig> pool = new List<MejoraConfig>(mejorasDisponibles);
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (pool.Count == 0)
+                break;
+
+            int index = Random.Range(0, pool.Count);
+            MejoraConfig config = pool[index];
+            pool.RemoveAt(index); // Evita repetir la misma mejora en la misma subida
+
+            Raridad raridad = GenerarRaridad(statsJugador);
+            float valor = ObtenerValorPorRareza(config, raridad);
+
+            opciones[i].config = config;
+            opciones[i].raridad = raridad;
+            opciones[i].valorAplicar = valor;
+        }
+    }
+
+    void ActualizarTextoUI()
+    {
         if (textoOpcion1 != null)
             textoOpcion1.text = DescribirOpcion(opciones[0]);
         if (textoOpcion2 != null)
@@ -63,48 +83,53 @@ public class LevelUpManager : MonoBehaviour
             textoOpcion3.text = DescribirOpcion(opciones[2]);
     }
 
-    OpcionMejora GenerarOpcion(PlayerStats stats)
+    string DescribirOpcion(OpcionGenerada op)
     {
-        OpcionMejora op = new OpcionMejora();
-        
-        int tiposCount = System.Enum.GetValues(typeof(TipoMejora)).Length;
-        op.tipo = (TipoMejora)Random.Range(0, tiposCount);
+        if (op.config == null) return "Sin mejora";
 
-        op.raridad = GenerarRaridad(stats);
-
-        return op;
+        // Puedes mejorar este texto si quieres enseñar el valor exacto
+        return $"[{op.raridad}] {op.config.nombre}";
     }
 
-    string DescribirOpcion(OpcionMejora op)
+    float ObtenerValorPorRareza(MejoraConfig config, Raridad raridad)
     {
-        string nombreTipo = op.tipo.ToString();
-        string nombreRaridad = op.raridad.ToString();
+        if (config == null) return 0f;
 
-        return nombreRaridad + " " + nombreTipo;
+        switch (raridad)
+        {
+            default:
+            case Raridad.Comun:      return config.valorComun;
+            case Raridad.Raro:       return config.valorRaro;
+            case Raridad.Epico:      return config.valorEpico;
+            case Raridad.Legendario: return config.valorLegendario;
+        }
     }
 
-    public void ElegirMejora1() {AplicarMejora(opciones[0]);}
-    public void ElegirMejora2() {AplicarMejora(opciones[1]);}
-    public void ElegirMejora3() {AplicarMejora(opciones[2]);}
+    // ====== LÓGICA DE RAREZA (incluye suerte) ======
 
     Raridad GenerarRaridad(PlayerStats stats)
     {
+        // Probabilidades base
         float pComun = 0.60f;
         float pRaro = 0.25f;
-        float pEpico = 0.10f; 
+        float pEpico = 0.10f;
         float pLegendario = 0.05f;
 
-        float bonus = stats != null ? stats.suerte * 0.001f : 0f; 
+        // Bonus por suerte (por ejemplo, suerte 50 = +5% repartido)
+        float suerte = (stats != null) ? stats.suerte : 0f;
+        float bonus = Mathf.Clamp01(suerte * 0.001f); // 0–0.1 como mucho
 
-        float quitarDeComun = Mathf.Min(pComun * 0.5f, bonus); 
-
+        float quitarDeComun = Mathf.Min(pComun * 0.5f, bonus);
         pComun -= quitarDeComun;
-        pRaro += quitarDeComun * 0.5f;
+        pRaro  += quitarDeComun * 0.5f;
         pEpico += quitarDeComun * 0.3f;
         pLegendario += quitarDeComun * 0.2f;
 
         float suma = pComun + pRaro + pEpico + pLegendario;
-        pComun /= suma; pRaro /= suma; pEpico /= suma; pLegendario /= suma;
+        pComun      /= suma;
+        pRaro       /= suma;
+        pEpico      /= suma;
+        pLegendario /= suma;
 
         float r = Random.value;
 
@@ -116,93 +141,66 @@ public class LevelUpManager : MonoBehaviour
         return Raridad.Legendario;
     }
 
-    void AplicarMejora(OpcionMejora op)
+    // ====== BOTONES (asigna estos en OnClick con índices 0,1,2) ======
+
+    public void ElegirOpcion1() => AplicarYSalir(0);
+    public void ElegirOpcion2() => AplicarYSalir(1);
+    public void ElegirOpcion3() => AplicarYSalir(2);
+
+    void AplicarYSalir(int index)
     {
-        if (statsActual == null)
-        {
-            CerrarMenu();
-            return;
-        }
-
-        float multComun = 2.0f;
-        float multRaro = 3.0f;
-        float multEpico = 4.5f;
-        float multLegendario = 6.0f;
-
-        float mult;
-
-        switch (op.raridad)
-        {
-            default:
-            case Raridad.Comun:
-                mult = multComun;
-                break;
-            case Raridad.Raro:
-                mult = multRaro;
-                break;
-            case Raridad.Epico:
-                mult = multEpico;
-                break;
-            case Raridad.Legendario:
-                mult = multLegendario;
-                break;
-            
-        }
-
-        switch (op.tipo)
-        {
-            case TipoMejora.VidaMaxima:
-                statsActual.vidaMaxima = Mathf.RoundToInt(10*mult);
-                statsActual.vidaActual = statsActual.vidaMaxima;
-                break;
-
-            case TipoMejora.Daño:
-                statsActual.danoProyectil *= Mathf.RoundToInt(1f + 0.15f * mult);
-                break;
-
-            case TipoMejora.Cadencia:
-                statsActual.cadenciaDisparo *= (1f - 0.08f * mult);
-                break;
-
-            case TipoMejora.VelocidadMovimiento:
-                statsActual.speed *= (1f + 0.10f * mult);
-                break;
-
-            case TipoMejora.Rango:
-                statsActual.rangoDisparo *= (1f + 0.12f * mult);
-                break;
-
-            case TipoMejora.Regeneracion:
-                statsActual.regeneracionVida += 0.5f * mult;
-                break;
-
-            case TipoMejora.VelocidadExp:
-                // Aumenta la velocidad de ganancia de experiencia
-                statsActual.multiplicadorExperiencia *= (1f + 0.10f* mult);
-                break;
-            case TipoMejora.Suerte:
-                statsActual.suerte += 5f * mult;
-                break;
-
-            case TipoMejora.Direcciones:
-                statsActual.cantidadDirecciones += Mathf.RoundToInt(1 * mult);
-                break;
-
-            case TipoMejora.VelocidadProyectil:
-                statsActual.velocidadProyectil *= (1f + 0.15f * mult);
-                break;
-        }
+        if (index < 0 || index >= opciones.Length) return;
+        AplicarMejora(opciones[index]);
         CerrarMenu();
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void AplicarMejora(OpcionGenerada op)
+    {
+        if (statsJugador == null || op.config == null) return;
+
+        float v = op.valorAplicar;
+
+        switch (op.config.tipoStat)
+        {
+            case TipoStat.VidaMax:
+                statsJugador.vidaMaxima += Mathf.RoundToInt(v);
+                statsJugador.vidaActual = statsJugador.vidaMaxima;
+                break;
+
+            case TipoStat.Daño:
+                // Tratamos v como porcentaje: 0.10 = +10% del daño actual
+                statsJugador.danoProyectil *= (1f + v);
+                break;
+
+            case TipoStat.Cadencia:
+                // v es porcentaje de reducción del tiempo entre disparos (0.1 = -10%)
+                statsJugador.cadenciaDisparo *= (1f - v);
+                break;
+
+            case TipoStat.VelocidadMovimiento:
+                statsJugador.speed *= (1f + v);
+                break;
+
+            case TipoStat.Direcciones:
+                statsJugador.cantidadDirecciones += Mathf.RoundToInt(v);
+                break;
+
+            // Amplía aquí con más tipos si los añades a TipoStat
+        }
+    }
+
     void CerrarMenu()
     {
         if (panelLevelUp != null)
             panelLevelUp.SetActive(false);
 
         Time.timeScale = 1f;
-        GameManager.Instancia.juegoEnPausa = false;
-        GameManager.Instancia.ActualizarUI();
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.juegoEnPausa = false;
+            GameManager.Instancia.ActualizarUI();
+        }
+
+        statsJugador = null;
     }
 }

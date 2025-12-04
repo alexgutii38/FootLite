@@ -105,10 +105,10 @@ public class EnemigoCaminante : MonoBehaviour
     {
         // 1. XP por golpe
         PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-        if (ps != null)
+        /*if (ps != null)
         {
             ps.GanarExperiencia(experienciaPorGolpe);
-        }
+        }*/
 
         // 2. Aplicar daño a la vida del enemigo
         vida -= cantidad;

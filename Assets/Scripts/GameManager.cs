@@ -163,19 +163,10 @@ public class GameManager : MonoBehaviour
         {
             textoVida = objVida.GetComponent<TextMeshProUGUI>();
     }
-    else
-        {
-            Debug.LogWarning("No se encontró el objeto TextoVida en la escena.");
-        }
-
         GameObject objEnemigos = GameObject.Find("textoEnemigos");
         if (objEnemigos != null)
         {
             textoEnemigos = objEnemigos.GetComponent<TextMeshProUGUI>();
-        }
-        else
-        {
-            Debug.LogWarning("No se encontró el objeto TextoEnemigos en la escena.");
         }
     }
 }

@@ -13,7 +13,7 @@ public class PlayerStats : MonoBehaviour
     [Header("Leveling")]
     public int nivel = 1;
     public int experienciaActual = 0;
-    public int experienciaSiguienteNivel = 100;
+    public int experienciaSiguienteNivel = 60;
     public float multiplicadorExperiencia = 1f;
 
     [Header("Stats del jugador")]
@@ -33,6 +33,9 @@ public class PlayerStats : MonoBehaviour
     public float regeneracionVida = 0f;
     void Start()
     {
+        nivel = 1;
+        experienciaActual = 0;
+        experienciaSiguienteNivel = Mathf.RoundToInt(Mathf.Pow(nivel + 3, 2));
         vidaActual = vidaMaxima;
     }
 
@@ -86,6 +89,9 @@ public class PlayerStats : MonoBehaviour
     {
         nivel++;
         
+        float nuevoObjetivo = 1.50f * Mathf.Pow(nivel + 3, 2);
+        experienciaSiguienteNivel = Mathf.RoundToInt(nuevoObjetivo);
+
         LevelUpManager manager = FindFirstObjectByType<LevelUpManager>();
         if (manager != null)
         {

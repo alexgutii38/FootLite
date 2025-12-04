@@ -1,81 +1,81 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq; // Necesario para ordenar la lista de enemigos
 
 public class DisparoAutomatico : MonoBehaviour
 {
     public GameObject balaPrefab;
-    [SerializeField] private Transform puntoDisparo;
+    private Transform puntoDisparo;
+   
     private float cadenciaDisparo;
     private float rangoDisparo;
-    private int numDirecciones = 0; // 0 = solo hacia enemigos, >0 = modo circular
-
+    private int maxBalasSimultaneas = 1; // Renombrado para que se entienda mejor (antes numDirecciones)
+   
     private float siguienteDisparo = 0f;
 
     void Start()
     {
-        PlayerStats stats = GetComponent<PlayerStats>();
-
-        if (stats == null)
+        puntoDisparo = transform.Find("PuntoDisparo");
+        if (puntoDisparo == null)
         {
-            Debug.LogError("DisparoAutomatico: No se encontró PlayerStats en el objeto.");
-            return;
+            GameObject temp = new GameObject("PuntoDisparo");
+            temp.transform.SetParent(transform);
+            temp.transform.localPosition = Vector3.zero;
+            puntoDisparo = temp.transform;
         }
 
-        cadenciaDisparo = stats.cadenciaDisparo;
-        rangoDisparo = stats.rangoDisparo;
-        numDirecciones =  stats.cantidadDirecciones;
-
+        ActualizarStats();
     }
 
     void Update()
     {
+        ActualizarStats();
+
         if (Time.time >= siguienteDisparo)
         {
-            if (Time.time >= siguienteDisparo)
-            {
-                GameObject objetivo = ObtenerEnemigoMasCercano();
-                if (objetivo != null)
-                {
-                    // Apunta al enemigo
-                    Vector3 direccion = (objetivo.transform.position - puntoDisparo.position).normalized;
-                    puntoDisparo.rotation = Quaternion.LookRotation(direccion);
-
-                    // Dispara la bala
-                    Instantiate(balaPrefab, puntoDisparo.position, puntoDisparo.rotation);
-
-                    siguienteDisparo = Time.time + cadenciaDisparo;
-                }
-            }
-            
-            /*float paso = 360f / numDirecciones;
-            for (int i = 0; i < numDirecciones; i++)
-            {
-                float angulo = i * paso;
-                Vector3 dir = Quaternion.Euler(0, angulo, 0) * Vector3.forward;
-                Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(dir));
-            }
-            */
-
-
+            DispararAEnemigos();
+            siguienteDisparo = Time.time + cadenciaDisparo;
         }
     }
 
-    GameObject ObtenerEnemigoMasCercano()
-{
-    Collider[] colls = Physics.OverlapSphere(puntoDisparo.position, rangoDisparo, LayerMask.GetMask("Enemies"));
-    GameObject masCercano = null;
-    float minDist = Mathf.Infinity;
-
-    foreach (var c in colls)
+    void ActualizarStats()
     {
-        float dist = Vector3.Distance(puntoDisparo.position, c.transform.position);
-        if (dist < minDist)
+        PlayerStats stats = GetComponent<PlayerStats>();
+        if (stats != null)
         {
-            minDist = dist;
-            masCercano = c.gameObject;
+            cadenciaDisparo = stats.cadenciaDisparo;
+            rangoDisparo = stats.rangoDisparo;
+            
+            maxBalasSimultaneas = 1+ stats.cantidadDirecciones;
         }
     }
-    return masCercano;
-}
 
+    void DispararAEnemigos()
+    {
+        // 1. Buscar todos los enemigos en rango
+        Collider[] colls = Physics.OverlapSphere(puntoDisparo.position, rangoDisparo, LayerMask.GetMask("Enemies"));
+       
+        if (colls.Length == 0) return;
+
+        // 2. Ordenarlos por distancia (de más cerca a más lejos)
+        var enemigosOrdenados = colls
+            .OrderBy(c => Vector3.Distance(puntoDisparo.position, c.transform.position))
+            .Take(maxBalasSimultaneas) // Coger solo los N primeros
+            .ToList();
+
+        // 3. Disparar a cada uno de los seleccionados
+        foreach (var enemigo in enemigosOrdenados)
+        {
+            if (enemigo != null)
+            {
+                Vector3 direccion = (enemigo.transform.position - puntoDisparo.position).normalized;
+               
+                // Orientar punto de disparo (opcional, visual)
+                // puntoDisparo.rotation = Quaternion.LookRotation(direccion);
+
+                // Crear bala mirando al enemigo
+                Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(direccion));
+            }
+        }
+    }
 }

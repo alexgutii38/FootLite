@@ -453,7 +453,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisparoAutomatico
   balaPrefab: {fileID: 2986311717874841091, guid: 934904de9847de247a5fa0c180fdfe11, type: 3}
-  puntoDisparo: {fileID: 215088599}
 --- !u!1 &448688829
 GameObject:
   m_ObjectHideFlags: 0
@@ -1615,10 +1614,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05694b24a83a9be4988303b32605dacb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpManager
+  mejorasDisponibles:
+  - {fileID: 11400000, guid: 612f2153a87c20b4ab5fda251c362459, type: 2}
+  - {fileID: 11400000, guid: 912ce5c557845c1468b4f7a672623540, type: 2}
+  - {fileID: 11400000, guid: 8ca7c21f5cdc15e41a78a63b36e35f00, type: 2}
+  - {fileID: 11400000, guid: b6629fd5e2b1efc489bc28b61115bce8, type: 2}
+  - {fileID: 11400000, guid: 42f150142b1547b4dbf056839c34df35, type: 2}
+  - {fileID: 11400000, guid: 2bfd2955768fae144913ee18cb4dc142, type: 2}
+  - {fileID: 11400000, guid: f365900aabdc19d4c9678ee05eadc4ad, type: 2}
+  - {fileID: 11400000, guid: 3f1f0cb6fad20034c8e7b643935ba79c, type: 2}
+  - {fileID: 11400000, guid: 9f490ee09883afe4abf8b050193ee000, type: 2}
+  - {fileID: 11400000, guid: dc09534bfb7cebf42a162d59b100db7d, type: 2}
+  panelLevelUp: {fileID: 1688729256}
   textoOpcion1: {fileID: 224687865}
   textoOpcion2: {fileID: 1386894703}
   textoOpcion3: {fileID: 787318197}
-  panelLevelUp: {fileID: 1688729256}
 --- !u!1 &1243641375
 GameObject:
   m_ObjectHideFlags: 0

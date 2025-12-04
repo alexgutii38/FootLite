@@ -11,12 +11,12 @@ public class Bala : MonoBehaviour
 
     void Start()
     {
-        PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
-        velocidad = stats.velocidadProyectil;
-        dano = stats.danoProyectil;
+        ActualizarStats();
+        
     }
     void Update()
     {
+        ActualizarStats();
         transform.position += transform.forward * velocidad * Time.deltaTime;
         // Solo mover si no hemos colisionado
         if (!colisionDetectada)
@@ -50,6 +50,16 @@ public class Bala : MonoBehaviour
         {
             // Solo marca la colisión, pero no destruye la bala hasta que el timer expire
             colisionDetectada = true;
+        }
+    }
+
+    void ActualizarStats()
+    {
+        PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
+        if (stats != null)
+        {
+            velocidad = stats.velocidadProyectil;
+            dano = stats.danoProyectil;
         }
     }
 }
