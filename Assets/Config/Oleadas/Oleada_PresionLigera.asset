@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b817a4f6593f6724e9af2838a614e379, type: 3}
+  m_Name: Oleada_PresionLigera
+  m_EditorClassIdentifier: Assembly-CSharp::WaveConfig
+  duracionOleada: 60
+  intervaloSpawn: 1.5
+  enemigosPorSpawn: 2
+  prefabsEnemigos:
+  - {fileID: 1061924988093087196, guid: c9e9d5835a7b3db48a29033333c9a55b, type: 3}
+  multiplicadorVida: 1
+  multiplicadorVelocidad: 1
+  experienciaBase: 20

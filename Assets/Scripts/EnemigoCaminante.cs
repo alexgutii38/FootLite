@@ -1,3 +1,4 @@
+using CartoonFX;
 using UnityEngine;
 
 
@@ -16,11 +17,19 @@ public class EnemigoCaminante : MonoBehaviour
     public float tiempoEntreDanos = 0.5f;
     public float rangoDeteccion = 50f;
 
+    [Header("Futbol FX")]
+
+    public ParticleSystem efectoMuerte;
+    public ParticleSystem prefabTextoDaño;
+
+    // public AudioClip sonidoGolpe; Para el audio
 
     private float alturaInicial;
     private Transform jugador;
     private float tiempoUltimoDano;
     private Rigidbody rb;
+
+
 
     void Start()
     {
@@ -103,27 +112,34 @@ public class EnemigoCaminante : MonoBehaviour
     // Recibir daño y muerte
     public void RecibirDano(float cantidad)
     {
-        // 1. XP por golpe
-        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-        /*if (ps != null)
+        if (prefabTextoDaño != null)
         {
-            ps.GanarExperiencia(experienciaPorGolpe);
-        }*/
+            ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
 
-        // 2. Aplicar daño a la vida del enemigo
+            CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
+            if(scriptTexto != null)
+            {
+                scriptTexto.MostrarValorDaño(cantidad);
+            }
+        }
+
+        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
+
         vida -= cantidad;
 
-        // 3. Si muere, XP extra por kill
-        if (vida <= 0f)
+        if(vida <= 0f)
         {
             GameManager.Instancia.SumarEliminado();
-
-            if (ps != null)
+            if(ps != null)
             {
                 ps.GanarExperiencia(experienciaAlMorir);
             }
 
+            if(efectoMuerte != null)
+            {
+                Instantiate(efectoMuerte, transform.position, Quaternion.identity);
+            }
             Destroy(gameObject);
-        }
+        } 
     }
 }

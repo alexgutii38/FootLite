@@ -110,9 +110,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemigoCaminante
   vida: 50
   velocidadMovimiento: 3
+  experienciaAlMorir: 20
+  experienciaPorGolpe: 5
   danoPorContacto: 10
   tiempoEntreDanos: 0.5
   rangoDeteccion: 50
+  efectoMuerte: {fileID: 1429954232896169632, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
+  "prefabTextoDa\xF1o": {fileID: 535799961814499386, guid: d8456a423ff8f3041a18674f3165abec, type: 3}
 --- !u!1 &6755171121685265723
 GameObject:
   m_ObjectHideFlags: 0
