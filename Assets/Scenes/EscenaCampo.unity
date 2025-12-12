@@ -2745,6 +2745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db71e7497ba361a479f6f6b042d9f157, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
+  particulaSpawn: {fileID: 5824670795371433368, guid: f6fd568b816c64943a44efc3add3a881, type: 3}
   oleadas:
   - {fileID: 11400000, guid: 8c0f1492980cbdd449f7c870f1ea9a3a, type: 2}
   - {fileID: 11400000, guid: bc840469c5618874598d2a00e3776245, type: 2}

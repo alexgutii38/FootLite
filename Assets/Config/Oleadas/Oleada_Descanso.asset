@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b817a4f6593f6724e9af2838a614e379, type: 3}
   m_Name: Oleada_Descanso
   m_EditorClassIdentifier: Assembly-CSharp::WaveConfig
-  duracionOleada: 15
-  intervaloSpawn: 5
+  duracionOleada: 30
+  intervaloSpawn: 3
   enemigosPorSpawn: 1
   prefabsEnemigos:
   - {fileID: 1061924988093087196, guid: c9e9d5835a7b3db48a29033333c9a55b, type: 3}
-  multiplicadorVida: 1
+  multiplicadorVida: 1.5
   multiplicadorVelocidad: 1
   experienciaBase: 20

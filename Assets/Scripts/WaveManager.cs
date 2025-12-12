@@ -3,22 +3,29 @@ using System.Collections.Generic;
 
 public class WaveManager : MonoBehaviour
 {
-    [Header("Secuencia de Oleadas")]
-    public List<WaveConfig> oleadas; // Arrastra aquí Oleada_Minuto1, Oleada_Minuto2...
-   
+    [Header("FX")]
+    public ParticleSystem particulaSpawn;
+
+
+    [Header("Base de datos")]
+    public List<WaveConfig> oleadas;
+
     [Header("Referencias")]
     public Transform jugador;
     public float radioSpawn = 12f;
+
+    [Header("Seguridad")]
+    public int limiteMaximoEnemigos = 100;
 
     private int indiceOleadaActual = 0;
     private float tiempoTranscurridoOleada = 0f;
     private float tiempoSiguienteSpawn = 0f;
 
-    // Estado actual (copia de la config para no machacar el asset)
     private WaveConfig oleadaActual;
-
-    [Header("Seguridad")]
-    public int limiteMaximoEnemigos = 100;
+   
+    // --- VARIABLES DE ESCALADO ---
+    private int cicloCompleto = 0; // Cuántas veces hemos pasado por todas las oleadas
+    private float multiplicadorDificultad = 1.0f; // Aumenta cada ciclo
 
     void Start()
     {
@@ -32,15 +39,15 @@ public class WaveManager : MonoBehaviour
     {
         if (oleadaActual == null) return;
 
-        // Control de tiempo de oleada
         tiempoTranscurridoOleada += Time.deltaTime;
-       
+
+        // Cuando termina una oleada, pasar a la siguiente
         if (tiempoTranscurridoOleada >= oleadaActual.duracionOleada)
         {
             PasarSiguienteOleada();
         }
 
-        // Lógica de Spawn
+        // Lógica de spawn
         if (Time.time >= tiempoSiguienteSpawn)
         {
             SpawnEnemigos();
@@ -50,18 +57,22 @@ public class WaveManager : MonoBehaviour
 
     void IniciarOleada(int indice)
     {
-        if (indice >= oleadas.Count)
+        // BUCLE: Si llegamos al final, volvemos al principio
+        indice = indice % oleadas.Count;
+       
+        // Si pasamos de oleada y volvemos a la 0, aumentamos el ciclo
+        if (indice == 0 && indiceOleadaActual != 0)
         {
-            Debug.Log("Fin de las oleadas - Bucle de la última o evento de victoria");
-            // Opción: Repetir la última oleada infinitamente pero más difícil
-            indice = oleadas.Count - 1;
+            cicloCompleto++;
+            multiplicadorDificultad = Mathf.Pow(1.15f, cicloCompleto); // +15% dificultad cada ciclo completo
+            Debug.Log($"=== CICLO {cicloCompleto + 1} === Multiplicador: {multiplicadorDificultad:F2}x");
         }
 
         indiceOleadaActual = indice;
         oleadaActual = oleadas[indice];
         tiempoTranscurridoOleada = 0f;
-       
-        Debug.Log($"Iniciando Oleada {indice + 1}");
+
+        Debug.Log($"Oleada {indice + 1}/{oleadas.Count} (Ciclo {cicloCompleto + 1})");
     }
 
     void PasarSiguienteOleada()
@@ -71,36 +82,46 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemigos()
     {
-        // Control de poblacion
-        int enemigosActuales = GameObject.FindGameObjectsWithTag("Enemigo").Length;
-        if (enemigosActuales >= limiteMaximoEnemigos)
-        {
+        // LÍMITE DE SEGURIDAD
+        if (GameObject.FindGameObjectsWithTag("Enemigo").Length >= limiteMaximoEnemigos)
             return;
-        }
 
         if (jugador == null || oleadaActual.prefabsEnemigos.Length == 0) return;
 
-        for (int i = 0; i < oleadaActual.enemigosPorSpawn; i++)
+        // ESCALADO: Cada ciclo completo suma un +15%
+        float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
+
+        int cantidad = oleadaActual.enemigosPorSpawn;
+
+        for (int i = 0; i < cantidad; i++)
         {
-            // 1. Posición aleatoria alrededor del jugador
             Vector2 puntoRandom = Random.insideUnitCircle.normalized * radioSpawn;
             Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, -0.5f, puntoRandom.y);
 
-            // 2. Elegir enemigo al azar de la lista de esta oleada
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
-
-            // 3. Instanciar
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
 
-            // 4. Aplicar Dificultad (Balanceo)
+            if(particulaSpawn != null)
+            {
+                ParticleSystem particulaObj = Instantiate(particulaSpawn, spawnPos, Quaternion.identity);
+                Destroy(particulaObj, particulaObj.main.duration);
+            }
+
             EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
             if (script != null)
             {
-                script.vida *= oleadaActual.multiplicadorVida;
+                // VIDA: Escala con ciclo
+                script.vida *= dificultadTotal;
+
+                // DAÑO: Escala un poco menos
+                script.danoPorContacto = Mathf.RoundToInt(script.danoPorContacto * dificultadTotal * 0.8f);
+
+                // VELOCIDAD: Tope para no ser injusto
                 script.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                script.experienciaAlMorir = oleadaActual.experienciaBase;
-                // Ajustar XP por golpe proporcionalmente si quieres
-                script.experienciaPorGolpe = Mathf.Max(1, oleadaActual.experienciaBase / 5);
+                script.velocidadMovimiento = Mathf.Min(script.velocidadMovimiento, 5.5f);
+
+                // XP: Más dura = más recompensa
+                script.experienciaAlMorir = Mathf.RoundToInt(script.experienciaAlMorir * dificultadTotal);
             }
         }
     }
