@@ -33,6 +33,8 @@ public class WaveManager : MonoBehaviour
             jugador = GameObject.FindGameObjectWithTag("Player").transform;
 
         IniciarOleada(0);
+
+        
     }
 
     void Update()
@@ -93,6 +95,8 @@ public class WaveManager : MonoBehaviour
 
         int cantidad = oleadaActual.enemigosPorSpawn;
 
+        
+
         for (int i = 0; i < cantidad; i++)
         {
             Vector2 puntoRandom = Random.insideUnitCircle.normalized * radioSpawn;
@@ -104,7 +108,29 @@ public class WaveManager : MonoBehaviour
             if(particulaSpawn != null)
             {
                 ParticleSystem particulaObj = Instantiate(particulaSpawn, spawnPos, Quaternion.identity);
-                Destroy(particulaObj, particulaObj.main.duration);
+
+                // Suavizado: Usamos un temporizador para que la partícula se destruya después de un tiempo
+                float tiempoVidaParticula = particulaObj.main.startLifetime.constantMax; // Duración original de la partícula
+                Destroy(particulaObj.gameObject, tiempoVidaParticula);  // Destrucción con el tiempo necesario
+
+                // Suavizado de opacidad: Modificar el color de la partícula para que desaparezca suavemente
+                var colorOverLifetime = particulaObj.colorOverLifetime;
+
+                // Creamos un Gradient para controlar el color y la opacidad
+                Gradient grad = new Gradient();
+                grad.colorKeys = new GradientColorKey[] {
+                new GradientColorKey(Color.white, 0f), // Color blanco al principio
+                new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f) // Totalmente transparente al final
+            };
+
+                // Creamos un GradientAlphaKey para controlar la opacidad
+                grad.alphaKeys = new GradientAlphaKey[] {
+                new GradientAlphaKey(1f, 0f), // Comienza opaco
+                new GradientAlphaKey(0f, 1f)  // Termina transparente
+            };
+
+                // Asignamos el Gradient directamente al colorOverLifetime
+                colorOverLifetime.color = grad;
             }
 
             EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
