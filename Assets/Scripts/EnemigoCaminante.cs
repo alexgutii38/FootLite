@@ -22,12 +22,13 @@ public class EnemigoCaminante : MonoBehaviour
     public ParticleSystem efectoMuerte;
     public ParticleSystem prefabTextoDaño;
 
-    // public AudioClip sonidoGolpe; Para el audio
+    //public AudioClip sonidoGolpe; Para el audio
 
     private float alturaInicial;
     private Transform jugador;
     private float tiempoUltimoDano;
     private Rigidbody rb;
+    public Animator animator;
 
 
 
@@ -58,6 +59,7 @@ public class EnemigoCaminante : MonoBehaviour
             // Mover
             if (rb != null)
                 rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento, rb.linearVelocity.y, direccion.z * velocidadMovimiento);
+                
             else
                 transform.position += direccion * velocidadMovimiento * Time.deltaTime;
         }
@@ -66,6 +68,8 @@ public class EnemigoCaminante : MonoBehaviour
             if (rb != null)
                 rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
+
+        animator.SetFloat("speed", velocidadMovimiento, 0.1f, Time.deltaTime);
 
         // Separación y altura mantienen igual...
         Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));

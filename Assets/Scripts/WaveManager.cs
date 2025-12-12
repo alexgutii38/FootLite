@@ -84,7 +84,7 @@ public class WaveManager : MonoBehaviour
         {
             // 1. Posición aleatoria alrededor del jugador
             Vector2 puntoRandom = Random.insideUnitCircle.normalized * radioSpawn;
-            Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, 0f, puntoRandom.y);
+            Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, -0.5f, puntoRandom.y);
 
             // 2. Elegir enemigo al azar de la lista de esta oleada
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];

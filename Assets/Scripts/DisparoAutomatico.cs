@@ -10,7 +10,8 @@ public class DisparoAutomatico : MonoBehaviour
     private float cadenciaDisparo;
     private float rangoDisparo;
     private int maxBalasSimultaneas = 1; // Renombrado para que se entienda mejor (antes numDirecciones)
-   
+    public AudioClip sonidoChute;
+    public AudioSource audioSource;
     private float siguienteDisparo = 0f;
 
     void Start()
@@ -20,7 +21,7 @@ public class DisparoAutomatico : MonoBehaviour
         {
             GameObject temp = new GameObject("PuntoDisparo");
             temp.transform.SetParent(transform);
-            temp.transform.localPosition = Vector3.zero;
+            temp.transform.localPosition = Vector3.zero;    
             puntoDisparo = temp.transform;
         }
 
@@ -75,6 +76,7 @@ public class DisparoAutomatico : MonoBehaviour
 
                 // Crear bala mirando al enemigo
                 Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(direccion));
+                audioSource.PlayOneShot(sonidoChute);
             }
         }
     }
