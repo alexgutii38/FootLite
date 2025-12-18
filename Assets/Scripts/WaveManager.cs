@@ -6,6 +6,14 @@ public class WaveManager : MonoBehaviour
     [Header("FX")]
     public ParticleSystem particulaSpawn;
 
+    [Header("Límites de spawn")]
+    public Renderer rendererSuelo;     // Arrastra aquí el suelo/campo (MeshRenderer o cualquier Renderer)
+    public float margenBorde = 1f;     // Para que no aparezca pegado a la pared
+
+    [Header("Suelo")]
+    public LayerMask groundLayer;      // Layer del suelo (Ground)
+    public float rayAltura = 50f;      // Desde cuánta altura lanzamos el rayo
+    public float offsetSuelo = 0.05f;  // Pequeño offset para que no “clave” el collider
 
     [Header("Base de datos")]
     public List<WaveConfig> oleadas;
@@ -20,12 +28,11 @@ public class WaveManager : MonoBehaviour
     private int indiceOleadaActual = 0;
     private float tiempoTranscurridoOleada = 0f;
     private float tiempoSiguienteSpawn = 0f;
-
     private WaveConfig oleadaActual;
-   
+
     // --- VARIABLES DE ESCALADO ---
-    private int cicloCompleto = 0; // Cuántas veces hemos pasado por todas las oleadas
-    private float multiplicadorDificultad = 1.0f; // Aumenta cada ciclo
+    private int cicloCompleto = 0;
+    private float multiplicadorDificultad = 1.0f;
 
     void Start()
     {
@@ -33,8 +40,6 @@ public class WaveManager : MonoBehaviour
             jugador = GameObject.FindGameObjectWithTag("Player").transform;
 
         IniciarOleada(0);
-
-        
     }
 
     void Update()
@@ -43,13 +48,9 @@ public class WaveManager : MonoBehaviour
 
         tiempoTranscurridoOleada += Time.deltaTime;
 
-        // Cuando termina una oleada, pasar a la siguiente
         if (tiempoTranscurridoOleada >= oleadaActual.duracionOleada)
-        {
             PasarSiguienteOleada();
-        }
 
-        // Lógica de spawn
         if (Time.time >= tiempoSiguienteSpawn)
         {
             SpawnEnemigos();
@@ -59,14 +60,12 @@ public class WaveManager : MonoBehaviour
 
     void IniciarOleada(int indice)
     {
-        // BUCLE: Si llegamos al final, volvemos al principio
         indice = indice % oleadas.Count;
-       
-        // Si pasamos de oleada y volvemos a la 0, aumentamos el ciclo
+
         if (indice == 0 && indiceOleadaActual != 0)
         {
             cicloCompleto++;
-            multiplicadorDificultad = Mathf.Pow(1.15f, cicloCompleto); // +15% dificultad cada ciclo completo
+            multiplicadorDificultad = Mathf.Pow(1.15f, cicloCompleto);
             Debug.Log($"=== CICLO {cicloCompleto + 1} === Multiplicador: {multiplicadorDificultad:F2}x");
         }
 
@@ -84,73 +83,90 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemigos()
     {
-        // LÍMITE DE SEGURIDAD
         if (GameObject.FindGameObjectsWithTag("Enemigo").Length >= limiteMaximoEnemigos)
             return;
 
-        if (jugador == null || oleadaActual.prefabsEnemigos.Length == 0) return;
+        if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0)
+            return;
 
-        // ESCALADO: Cada ciclo completo suma un +15%
         float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
-
         int cantidad = oleadaActual.enemigosPorSpawn;
 
-        
+        // Bounds del suelo (en mundo). Si no hay suelo asignado, spawnea relativo al jugador sin clamp.
+        Bounds boundsSuelo = new Bounds();
+        bool tieneBounds = false;
+
+        if (rendererSuelo != null)
+        {
+            boundsSuelo = rendererSuelo.bounds;
+            tieneBounds = true;
+        }
 
         for (int i = 0; i < cantidad; i++)
         {
+            // 1) Posición candidata en XZ alrededor del jugador
             Vector2 puntoRandom = Random.insideUnitCircle.normalized * radioSpawn;
-            Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, -0.5f, puntoRandom.y);
+            Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, 0f, puntoRandom.y);
 
+            // 2) Clamp dentro del suelo (solo X/Z)
+            if (tieneBounds)
+            {
+                spawnPos.x = Mathf.Clamp(spawnPos.x, boundsSuelo.min.x + margenBorde, boundsSuelo.max.x - margenBorde);
+                spawnPos.z = Mathf.Clamp(spawnPos.z, boundsSuelo.min.z + margenBorde, boundsSuelo.max.z - margenBorde);
+            }
+
+            // 3) Raycast para calcular la Y real del suelo en ese X/Z
+            float startY = tieneBounds ? (boundsSuelo.max.y + rayAltura) : (jugador.position.y + rayAltura);
+            Vector3 rayStart = new Vector3(spawnPos.x, startY, spawnPos.z);
+
+            RaycastHit hit;
+            bool hitOk = false;
+
+            // Si groundLayer está en 0 (Nothing), raycastea contra todo.
+            if (groundLayer.value == 0)
+                hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f);
+            else
+                hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f, groundLayer);
+
+            if (hitOk)
+                spawnPos.y = hit.point.y + offsetSuelo;
+            else
+                spawnPos.y = jugador.position.y; // fallback si no encuentra suelo
+
+            // 4) Instanciar enemigo
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
 
-            if(particulaSpawn != null)
+            // Partícula de spawn
+            if (particulaSpawn != null)
             {
                 ParticleSystem particulaObj = Instantiate(particulaSpawn, spawnPos, Quaternion.identity);
+                float tiempoVidaParticula = particulaObj.main.startLifetime.constantMax;
+                Destroy(particulaObj.gameObject, tiempoVidaParticula);
 
-                // Suavizado: Usamos un temporizador para que la partícula se destruya después de un tiempo
-                float tiempoVidaParticula = particulaObj.main.startLifetime.constantMax; // Duración original de la partícula
-                Destroy(particulaObj.gameObject, tiempoVidaParticula);  // Destrucción con el tiempo necesario
-
-                // Suavizado de opacidad: Modificar el color de la partícula para que desaparezca suavemente
                 var colorOverLifetime = particulaObj.colorOverLifetime;
-
-                // Creamos un Gradient para controlar el color y la opacidad
                 Gradient grad = new Gradient();
                 grad.colorKeys = new GradientColorKey[] {
-                new GradientColorKey(Color.white, 0f), // Color blanco al principio
-                new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f) // Totalmente transparente al final
-            };
-
-                // Creamos un GradientAlphaKey para controlar la opacidad
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f)
+                };
                 grad.alphaKeys = new GradientAlphaKey[] {
-                new GradientAlphaKey(1f, 0f), // Comienza opaco
-                new GradientAlphaKey(0f, 1f)  // Termina transparente
-            };
-
-                // Asignamos el Gradient directamente al colorOverLifetime
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0f, 1f)
+                };
                 colorOverLifetime.color = grad;
             }
 
+            // Escalado stats
             EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
             if (script != null)
             {
-                // VIDA: Escala con ciclo
                 script.vida *= dificultadTotal;
-
-                // DAÑO: Escala un poco menos
                 script.danoPorContacto = Mathf.RoundToInt(script.danoPorContacto * dificultadTotal * 0.8f);
-
-                // VELOCIDAD: Tope para no ser injusto
                 script.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
                 script.velocidadMovimiento = Mathf.Min(script.velocidadMovimiento, 5.5f);
-
-                // XP: Más dura = más recompensa
                 script.experienciaAlMorir = Mathf.RoundToInt(script.experienciaAlMorir * dificultadTotal);
             }
         }
     }
 }
-
-
