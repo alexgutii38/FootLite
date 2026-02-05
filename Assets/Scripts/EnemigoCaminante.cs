@@ -2,7 +2,7 @@ using CartoonFX;
 using UnityEngine;
 
 
-public class EnemigoCaminante : MonoBehaviour
+public class EnemigoCaminante : MonoBehaviour, IDamageable
 {
     // ==== NUEVO ====
     [Header("Atributos escalables")]
