@@ -2,64 +2,61 @@ using UnityEngine;
 
 public class Bala : MonoBehaviour
 {
+    [Header("Vida")]
+    public float tiempoVida = 2f;
+
+    [Header("Anti-atasco al spawnear")]
+    public float ignorarColisionesAlInicio = 0.05f;
+
     private float velocidad;
     private float dano;
-    public float tiempoVida = 2f; // La bala vive 2 segundos
 
-    private float tiempoActual = 0f;
-    private bool colisionDetectada = false;
+    private float tiempoActual;
+    private float tiempoSpawn;
 
-    void Start()
+    private PlayerStats stats;
+
+    private void Start()
     {
+        tiempoSpawn = Time.time;
+        stats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
         ActualizarStats();
-        
     }
-    void Update()
+
+    private void Update()
     {
         ActualizarStats();
-        transform.position += transform.forward * velocidad * Time.deltaTime;
-        // Solo mover si no hemos colisionado
-        if (!colisionDetectada)
-        {
-            transform.Translate(Vector3.forward * velocidad * Time.deltaTime);
-        }
 
-        // Aumentar tiempo actual
+        transform.Translate(Vector3.forward * velocidad * Time.deltaTime);
+
         tiempoActual += Time.deltaTime;
-
-        // Si pasa el tiempo de vida, destruir la bala
         if (tiempoActual >= tiempoVida)
-        {
             Destroy(gameObject);
-        }
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Enemies"))
+        // Ignora colisiones justo al spawnear (si nace dentro del suelo/collider)
+        if (Time.time < tiempoSpawn + ignorarColisionesAlInicio) return;
+
+        if (other.CompareTag("Player")) return;
+
+        IDamageable damageable = other.GetComponentInParent<IDamageable>();
+        if (damageable != null)
         {
-            EnemigoCaminante enemigo = other.GetComponent<EnemigoCaminante>();
-            if (enemigo != null)
-            {
-                enemigo.RecibirDano(dano);
-                
-            }
-            Destroy(gameObject); // Destruye normalmente al impactar con un enemigo
+            damageable.RecibirDano(dano);
+            Destroy(gameObject);
+            return;
         }
-        else if (!other.CompareTag("Player"))
-        {
-            // Solo marca la colisión, pero no destruye la bala hasta que el timer expire
-            colisionDetectada = true;
-        }
+
+        // Si no es enemigo, destruye la bala (en vez de dejarla tirada en el suelo)
+        Destroy(gameObject);
     }
 
-    void ActualizarStats()
+    private void ActualizarStats()
     {
-        PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
-        if (stats != null)
-        {
-            velocidad = stats.velocidadProyectil;
-            dano = stats.danoProyectil;
-        }
+        if (stats == null) return;
+        velocidad = stats.velocidadProyectil;
+        dano = stats.danoProyectil;
     }
 }

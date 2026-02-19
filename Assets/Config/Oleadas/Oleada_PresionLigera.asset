@@ -17,6 +17,7 @@ MonoBehaviour:
   enemigosPorSpawn: 2
   prefabsEnemigos:
   - {fileID: 1061924988093087196, guid: c9e9d5835a7b3db48a29033333c9a55b, type: 3}
+  - {fileID: 1389339967044803490, guid: b53affce477606f418b8b9d4dfeacdd0, type: 3}
   multiplicadorVida: 1
   multiplicadorVelocidad: 1
   experienciaBase: 20
