@@ -6,7 +6,6 @@ public enum Raridad { Comun, Raro, Epico, Legendario }
 public class LevelUpManager : MonoBehaviour
 {
     [Header("Base de datos de mejoras")]
-    // Arrastra aquí en el Inspector todos tus MejoraConfig (Config_Daño, Config_Vida, etc.)
     public List<MejoraConfig> mejorasDisponibles;
 
     [Header("UI")]
@@ -15,7 +14,6 @@ public class LevelUpManager : MonoBehaviour
     public TMPro.TextMeshProUGUI textoOpcion2;
     public TMPro.TextMeshProUGUI textoOpcion3;
 
-    // Estructura interna para recordar qué tiene cada botón
     private struct OpcionGenerada
     {
         public MejoraConfig config;
@@ -26,25 +24,18 @@ public class LevelUpManager : MonoBehaviour
     private OpcionGenerada[] opciones = new OpcionGenerada[3];
     private PlayerStats statsJugador;
 
-    // ====== LLAMADO DESDE PlayerStats.SubirNivel() ======
     public void MostrarOpciones(PlayerStats stats)
     {
         statsJugador = stats;
-
-        // Pausar juego
         Time.timeScale = 0f;
         if (GameManager.Instancia != null)
             GameManager.Instancia.juegoEnPausa = true;
-
         if (panelLevelUp != null)
             panelLevelUp.SetActive(true);
-
-        // Generar 3 opciones distintas
         GenerarOpciones();
         ActualizarTextoUI();
     }
 
-    // Genera las 3 opciones (tipo + rareza + valor)
     void GenerarOpciones()
     {
         if (mejorasDisponibles == null || mejorasDisponibles.Count == 0)
@@ -54,19 +45,14 @@ public class LevelUpManager : MonoBehaviour
         }
 
         List<MejoraConfig> pool = new List<MejoraConfig>(mejorasDisponibles);
-
         for (int i = 0; i < 3; i++)
         {
-            if (pool.Count == 0)
-                break;
-
+            if (pool.Count == 0) break;
             int index = Random.Range(0, pool.Count);
             MejoraConfig config = pool[index];
-            pool.RemoveAt(index); // Evita repetir la misma mejora en la misma subida
-
+            pool.RemoveAt(index);
             Raridad raridad = GenerarRaridad(statsJugador);
             float valor = ObtenerValorPorRareza(config, raridad);
-
             opciones[i].config = config;
             opciones[i].raridad = raridad;
             opciones[i].valorAplicar = valor;
@@ -75,26 +61,20 @@ public class LevelUpManager : MonoBehaviour
 
     void ActualizarTextoUI()
     {
-        if (textoOpcion1 != null)
-            textoOpcion1.text = DescribirOpcion(opciones[0]);
-        if (textoOpcion2 != null)
-            textoOpcion2.text = DescribirOpcion(opciones[1]);
-        if (textoOpcion3 != null)
-            textoOpcion3.text = DescribirOpcion(opciones[2]);
+        if (textoOpcion1 != null) textoOpcion1.text = DescribirOpcion(opciones[0]);
+        if (textoOpcion2 != null) textoOpcion2.text = DescribirOpcion(opciones[1]);
+        if (textoOpcion3 != null) textoOpcion3.text = DescribirOpcion(opciones[2]);
     }
 
     string DescribirOpcion(OpcionGenerada op)
     {
         if (op.config == null) return "Sin mejora";
-
-        // Puedes mejorar este texto si quieres enseñar el valor exacto
-        return $"[{op.raridad}] {op.config.nombre}";
+        return $"[{op.raridad}] {op.config.nombre}\n{op.config.descripcion}";
     }
 
     float ObtenerValorPorRareza(MejoraConfig config, Raridad raridad)
     {
         if (config == null) return 0f;
-
         switch (raridad)
         {
             default:
@@ -105,34 +85,19 @@ public class LevelUpManager : MonoBehaviour
         }
     }
 
-    // ====== LÓGICA DE RAREZA (incluye suerte) ======
-
     Raridad GenerarRaridad(PlayerStats stats)
     {
-        // Probabilidades base
-        float pComun = 0.60f;
-        float pRaro = 0.25f;
-        float pEpico = 0.10f;
-        float pLegendario = 0.05f;
-
-        // Bonus por suerte (por ejemplo, suerte 50 = +5% repartido)
+        float pComun = 0.60f, pRaro = 0.25f, pEpico = 0.10f, pLegendario = 0.05f;
         float suerte = (stats != null) ? stats.suerte : 0f;
-        float bonus = Mathf.Clamp01(suerte * 0.001f); // 0–0.1 como mucho
-
+        float bonus = Mathf.Clamp01(suerte * 0.001f);
         float quitarDeComun = Mathf.Min(pComun * 0.5f, bonus);
         pComun -= quitarDeComun;
         pRaro  += quitarDeComun * 0.5f;
         pEpico += quitarDeComun * 0.3f;
         pLegendario += quitarDeComun * 0.2f;
-
         float suma = pComun + pRaro + pEpico + pLegendario;
-        pComun      /= suma;
-        pRaro       /= suma;
-        pEpico      /= suma;
-        pLegendario /= suma;
-
+        pComun /= suma; pRaro /= suma; pEpico /= suma; pLegendario /= suma;
         float r = Random.value;
-
         if (r < pComun) return Raridad.Comun;
         r -= pComun;
         if (r < pRaro) return Raridad.Raro;
@@ -140,8 +105,6 @@ public class LevelUpManager : MonoBehaviour
         if (r < pEpico) return Raridad.Epico;
         return Raridad.Legendario;
     }
-
-    // ====== BOTONES (asigna estos en OnClick con índices 0,1,2) ======
 
     public void ElegirOpcion1() => AplicarYSalir(0);
     public void ElegirOpcion2() => AplicarYSalir(1);
@@ -157,7 +120,6 @@ public class LevelUpManager : MonoBehaviour
     void AplicarMejora(OpcionGenerada op)
     {
         if (statsJugador == null || op.config == null) return;
-
         float v = op.valorAplicar;
 
         switch (op.config.tipoStat)
@@ -168,12 +130,10 @@ public class LevelUpManager : MonoBehaviour
                 break;
 
             case TipoStat.Daño:
-                // Tratamos v como porcentaje: 0.10 = +10% del daño actual
                 statsJugador.danoProyectil *= (1f + v);
                 break;
 
             case TipoStat.Cadencia:
-                // v es porcentaje de reducción del tiempo entre disparos (0.1 = -10%)
                 statsJugador.cadenciaDisparo *= (1f - v);
                 break;
 
@@ -185,7 +145,25 @@ public class LevelUpManager : MonoBehaviour
                 statsJugador.cantidadDirecciones += Mathf.RoundToInt(v);
                 break;
 
-            // Amplía aquí con más tipos si los añades a TipoStat
+            case TipoStat.Regeneracion:       // ← NUEVO
+                statsJugador.regeneracionVida += v;
+                break;
+
+            case TipoStat.VelocidadProyectil: // ← NUEVO
+                statsJugador.velocidadProyectil *= (1f + v);
+                break;
+
+            case TipoStat.Rango:              // ← NUEVO
+                statsJugador.rangoDisparo += v;
+                break;
+
+            case TipoStat.VelocidadXP:        // ← NUEVO
+                statsJugador.multiplicadorExperiencia += v;
+                break;
+
+            case TipoStat.Suerte:             // ← NUEVO
+                statsJugador.suerte += v;
+                break;
         }
     }
 
@@ -193,14 +171,12 @@ public class LevelUpManager : MonoBehaviour
     {
         if (panelLevelUp != null)
             panelLevelUp.SetActive(false);
-
         Time.timeScale = 1f;
         if (GameManager.Instancia != null)
         {
             GameManager.Instancia.juegoEnPausa = false;
             GameManager.Instancia.ActualizarUI();
         }
-
         statsJugador = null;
     }
 }

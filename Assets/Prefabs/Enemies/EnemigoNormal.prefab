@@ -12,10 +12,10 @@ GameObject:
   - component: {fileID: -3794195496382938945}
   - component: {fileID: 7198977543052182355}
   - component: {fileID: -4034138905577982243}
-  - component: {fileID: 145176908142607234}
+  - component: {fileID: -4759504487893246904}
   m_Layer: 3
-  m_Name: Enemigo
-  m_TagString: Enemies
+  m_Name: EnemigoNormal
+  m_TagString: Enemigo
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -96,7 +96,7 @@ Halo:
     serializedVersion: 2
     rgba: 4278245375
   m_Size: 1
---- !u!114 &145176908142607234
+--- !u!114 &-4759504487893246904
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -190,6 +190,10 @@ PrefabInstance:
       propertyPath: m_AABB.m_Extent.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8133678830744558435, guid: b8f7181010d63ee43912389c6f174f35, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 539b52bda4cfced4f9e1c5f0588e1686, type: 2}
     - target: {fileID: -6722085885383957590, guid: b8f7181010d63ee43912389c6f174f35, type: 3}
       propertyPath: m_Enabled
       value: 0
