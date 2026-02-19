@@ -2,12 +2,12 @@ using CartoonFX;
 using UnityEngine;
 
 
-public class EnemigoCaminante : MonoBehaviour, IDamageable
+public class EnemigoDelantero : MonoBehaviour
 {
     // ==== NUEVO ====
     [Header("Atributos escalables")]
     public float vida = 50f;
-    public float velocidadMovimiento = 3f;
+    public float velocidadMovimiento = 5f;
     public int experienciaAlMorir = 20;
 
     public int experienciaPorGolpe = 5;
