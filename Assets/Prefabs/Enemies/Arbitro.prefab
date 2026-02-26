@@ -102,17 +102,17 @@ MonoBehaviour:
   velocidadMovimiento: 2.4
   danoPorContacto: 6
   tiempoEntreDanos: 0.6
-  rangoDeteccion: 70
-  distanciaSeguridad: 4
+  rangoDeteccion: 120
+  distanciaSeguridad: 5
   histeresis: 0.25
   prefabTarjeta: {fileID: 4475654984264824302, guid: 0837a73e42bb88c47ab7d2a1358be27c, type: 3}
   puntoDisparo: {fileID: 5579510920440172089}
   rangoDisparo: 8
   cooldownDisparo: 1.5
   distanciaMinimaDisparo: 2.5
-  probabilidadRoja: 0.35
-  danoAmarilla: 7
-  danoRoja: 12
+  probabilidadRoja: 0.4
+  danoAmarilla: 15
+  danoRoja: 30
   colorAmarilla: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   colorRoja: {r: 1, g: 0, b: 0, a: 1}
   orbitarEnRango: 1

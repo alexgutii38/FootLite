@@ -14,6 +14,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/EscenaDerrota.unity
     guid: 7c2de0c2325e6054999e4bf7e6920b5d
+  - enabled: 1
+    path: Assets/Scenes/EscenaMundos.unity
+    guid: 85143219a3fa3a14ab14962cb269d4a5
+  - enabled: 1
+    path: Assets/Scenes/EscenaNiveles.unity
+    guid: e926ec5b7ef197f46a92a7c3dced7814
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 289c1b55c9541489481df5cc06664110, type: 3}
   m_UseUCBPForAssetBundles: 0
