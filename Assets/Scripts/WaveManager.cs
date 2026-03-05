@@ -179,15 +179,42 @@ public class WaveManager : MonoBehaviour
                 colorOverLifetime.color = grad;
             }
 
-            EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
-            if (script != null)
+ // 1. Intentamos escalar si es un Caminante
+            EnemigoCaminante scriptCam = enemigo.GetComponent<EnemigoCaminante>();
+            if (scriptCam != null)
             {
-                script.vida *= dificultadTotal;
-                script.danoPorContacto = Mathf.RoundToInt(script.danoPorContacto * dificultadTotal * 0.8f);
-                script.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                script.velocidadMovimiento = Mathf.Min(script.velocidadMovimiento, 5.5f);
-                script.experienciaAlMorir = Mathf.RoundToInt(script.experienciaAlMorir * dificultadTotal);
+                scriptCam.vida *= dificultadTotal;
+                scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.8f);
+                scriptCam.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptCam.velocidadMovimiento = Mathf.Min(scriptCam.velocidadMovimiento, 5.5f);
+                scriptCam.experienciaAlMorir = Mathf.RoundToInt(scriptCam.experienciaAlMorir * dificultadTotal);
             }
-        }
-    }
-}
+
+            // 2. Intentamos escalar si es un Delantero
+            EnemigoDelantero scriptDel = enemigo.GetComponent<EnemigoDelantero>();
+            if (scriptDel != null)
+            {
+                scriptDel.vida *= dificultadTotal;
+                scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.8f);
+                scriptDel.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptDel.velocidadMovimiento = Mathf.Min(scriptDel.velocidadMovimiento, 5.5f);
+                scriptDel.experienciaAlMorir = Mathf.RoundToInt(scriptDel.experienciaAlMorir * dificultadTotal);
+            }
+
+            // 3. Intentamos escalar si es un Árbitro
+            EnemigoArbitro scriptArb = enemigo.GetComponent<EnemigoArbitro>();
+            if (scriptArb != null)
+            {
+                scriptArb.vida *= dificultadTotal;
+                scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.8f);
+                scriptArb.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento, 5.5f);
+                scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
+                
+                // Extra: Hacemos que sus tarjetas rojas y amarillas también duelan más
+                scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
+                scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
+            }
+        } // <-- Aquí acaba el bucle for
+    } // <-- Aquí acaba el método SpawnEnemigos
+} // <-- Aquí acaba la clase WaveManager

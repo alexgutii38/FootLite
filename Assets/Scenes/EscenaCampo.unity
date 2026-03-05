@@ -4967,7 +4967,7 @@ MonoBehaviour:
   enemigosActivos: 0
   tiempoPartida: 0
   juegoEnPausa: 0
-  tiempoParaGanar: 10
+  tiempoParaGanar: 420
   nivelCompletado: 0
   panelVictoria: {fileID: 666730176}
   textoVida: {fileID: 904572934}

@@ -8,6 +8,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     public int danoPorContacto = 6;
     public float tiempoEntreDanos = 0.6f;
     public float rangoDeteccion = 50f;
+    public int experienciaAlMorir = 25;
 
     [Header("Distancia de seguridad")]
     public float distanciaSeguridad = 4f;
@@ -221,14 +222,18 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 public void RecibirDano(float cantidad)
     {
         vida -= cantidad;
-        
-        // Solo entra aquí si el árbitro muere
         if (vida <= 0f)
         {
-            // Sumamos la kill AQUÍ ADENTRO
             if (GameManager.Instancia != null)
             {
                 GameManager.Instancia.SumarEliminado();
+            }
+
+            // <-- NUEVAS LÍNEAS: Buscar al jugador y darle la XP
+            PlayerStats ps = FindFirstObjectByType<PlayerStats>();
+            if (ps != null)
+            {
+                ps.GanarExperiencia(experienciaAlMorir);
             }
 
             if (efectoMuerte != null)
