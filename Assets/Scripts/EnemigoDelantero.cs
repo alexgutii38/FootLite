@@ -1,36 +1,30 @@
 using CartoonFX;
 using UnityEngine;
 
-
-public class EnemigoDelantero : MonoBehaviour
+public class EnemigoDelantero : MonoBehaviour, IDamageable
 {
-    // ==== NUEVO ====
     [Header("Atributos escalables")]
     public float vida = 50f;
     public float velocidadMovimiento = 5f;
     public int experienciaAlMorir = 20;
-
     public int experienciaPorGolpe = 5;
-    // ===============
 
     public int danoPorContacto = 10;
     public float tiempoEntreDanos = 0.5f;
     public float rangoDeteccion = 50f;
 
     [Header("Futbol FX")]
-
     public ParticleSystem efectoMuerte;
     public ParticleSystem prefabTextoDaño;
-
-    //public AudioClip sonidoGolpe; Para el audio
 
     private float alturaInicial;
     private Transform jugador;
     private float tiempoUltimoDano;
     private Rigidbody rb;
+    [Header("Animación")]
     public Animator animator;
 
-
+    private bool moviendose;
 
     void Start()
     {
@@ -47,31 +41,34 @@ public class EnemigoDelantero : MonoBehaviour
 
         if (distancia <= rangoDeteccion)
         {
+            moviendose = true;
             Vector3 direccion = (jugador.position - transform.position).normalized;
 
-            // Rotar para mirar al jugador
             if (direccion != Vector3.zero)
             {
                 Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, Time.deltaTime * 5f);
             }
 
-            // Mover
             if (rb != null)
-                rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento, rb.linearVelocity.y, direccion.z * velocidadMovimiento);
-                
+                rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento, 0f, direccion.z * velocidadMovimiento);
             else
                 transform.position += direccion * velocidadMovimiento * Time.deltaTime;
         }
         else
         {
+            moviendose = false;
             if (rb != null)
-                rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+                rb.linearVelocity = Vector3.zero;
         }
 
-        animator.SetFloat("speed", velocidadMovimiento, 0.1f, Time.deltaTime);
+        // Velocidad REAL para la animación: 0 cuando parado, velocidadMovimiento cuando persigue
+        float speedAnimacion = moviendose ? velocidadMovimiento : 0f;
+        if (animator != null)
+            animator.SetFloat("speed", speedAnimacion, 0.1f, Time.deltaTime);
 
-        // Separación y altura mantienen igual...
+
+        // Separación entre enemigos
         Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));
         foreach (Collider col in vecinos)
         {
@@ -84,9 +81,8 @@ public class EnemigoDelantero : MonoBehaviour
 
         if (jugador != null)
         {
-            float distaciaJugador = Vector3.Distance(transform.position, jugador.position);
-            float distanciaMinima = 1f;
-            if (distaciaJugador < distanciaMinima)
+            float distanciaJugador = Vector3.Distance(transform.position, jugador.position);
+            if (distanciaJugador < 1f)
             {
                 Vector3 direccionSeparacion = (transform.position - jugador.position).normalized;
                 transform.position += direccionSeparacion * 0.15f;
@@ -112,38 +108,29 @@ public class EnemigoDelantero : MonoBehaviour
         }
     }
 
-    // ==== NUEVO ====
-    // Recibir daño y muerte
     public void RecibirDano(float cantidad)
     {
         if (prefabTextoDaño != null)
         {
             ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
-
             CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
-            if(scriptTexto != null)
-            {
+            if (scriptTexto != null)
                 scriptTexto.MostrarValorDaño(cantidad);
-            }
         }
 
         PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-
         vida -= cantidad;
 
-        if(vida <= 0f)
+        if (vida <= 0f)
         {
             GameManager.Instancia.SumarEliminado();
-            if(ps != null)
-            {
+            if (ps != null)
                 ps.GanarExperiencia(experienciaAlMorir);
-            }
 
-            if(efectoMuerte != null)
-            {
+            if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
-            }
+
             Destroy(gameObject);
-        } 
+        }
     }
 }

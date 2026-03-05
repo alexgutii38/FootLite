@@ -3,25 +3,18 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public GameObject optionsMenu;
-    public GameObject mainMenu;
-
-    public void OpenOptionsPanel()
-    {
-        mainMenu.SetActive(false);
-        optionsMenu.SetActive(true);
-    }
-
-    public void OpenMainMenuPanel()
-    {
-        mainMenu.SetActive(true);
-        optionsMenu.SetActive(false);
-    }
-
     public void PlayGame()
     {
-        SceneManager.LoadScene("EscenaCampo");
+        SceneManager.LoadScene("EscenaMundos"); // ← cambia esto
     }
-    
-}
 
+    public void Options()
+    {
+        // Tu lógica de opciones
+    }
+
+    public void Exit()
+    {
+        Application.Quit();
+    }
+}

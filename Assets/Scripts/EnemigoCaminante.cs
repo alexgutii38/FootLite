@@ -94,6 +94,7 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
         }
 
         // Mantener altura constante
+        animator.SetFloat("speed", velocidadMovimiento, 0.1f, Time.deltaTime);
         Vector3 posicionY = transform.position;
         posicionY.y = alturaInicial;
         transform.position = posicionY;

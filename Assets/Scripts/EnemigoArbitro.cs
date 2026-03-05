@@ -1,7 +1,6 @@
 using UnityEngine;
 
 public class EnemigoArbitro : MonoBehaviour, IDamageable
-
 {
     [Header("Stats")]
     public float vida = 40f;
@@ -35,13 +34,16 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     public float velocidadRetroceso = 1.2f;
 
     [Header("Separación entre árbitros")]
-    public LayerMask layerEnemigos;     // Marca la layer Enemies en el inspector
+    public LayerMask layerEnemigos;
     public float radioSeparacion = 1.2f;
     public float fuerzaSeparacion = 2.5f;
 
     [Header("Variación ángulos")]
     public float cambioLadoCada = 2.5f;
     [Range(0f, 1f)] public float probCambioLado = 0.35f;
+
+    [Header("Animación")]
+    public Animator animator; // ← NUEVO: arrastra el Animator en el prefab
 
     [Header("FX opcional")]
     public ParticleSystem efectoMuerte;
@@ -51,7 +53,6 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     private float tiempoUltimoDano;
     private float tiempoUltimoDisparo;
     private Rigidbody rb;
-
     private int strafeSign = 1;
     private float tCambioLado;
 
@@ -63,7 +64,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         rb = GetComponent<Rigidbody>();
         alturaInicial = transform.position.y;
 
-        strafeSign = (Random.value < 0.5f) ? -1 : 1; // Random.value ∈ [0..1] [web:192]
+        strafeSign = (Random.value < 0.5f) ? -1 : 1;
         tCambioLado = Time.time + Random.Range(0f, cambioLadoCada);
     }
 
@@ -73,7 +74,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         if (orbitarEnRango && cambioLadoCada > 0f && Time.time >= tCambioLado)
         {
-            if (Random.value < probCambioLado) strafeSign *= -1; // Random.value ∈ [0..1] [web:192]
+            if (Random.value < probCambioLado) strafeSign *= -1;
             tCambioLado = Time.time + cambioLadoCada;
         }
 
@@ -84,10 +85,8 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         if (dist < 0.001f) return;
 
         Vector3 dirToPlayer = toPlayer / dist;
-
         bool enRangoDeteccion = dist <= rangoDeteccion;
 
-        // Mirar al jugador para disparar
         Quaternion rotObjetivo = Quaternion.LookRotation(dirToPlayer);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotObjetivo, Time.deltaTime * 8f);
 
@@ -95,36 +94,25 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         if (enRangoDeteccion && dist > (distanciaSeguridad + histeresis))
         {
-            // Acercarse hasta la distancia de seguridad
             velDeseada = dirToPlayer * velocidadMovimiento;
         }
         else if (enRangoDeteccion && dist < (distanciaSeguridad - histeresis))
         {
-            // Si estás demasiado cerca, se aparta un poco
             velDeseada = (-dirToPlayer) * velocidadRetroceso;
         }
         else if (enRangoDeteccion)
         {
-            // Banda: orbitar para buscar otros ángulos
             if (orbitarEnRango)
             {
                 Vector3 tangent = Vector3.Cross(Vector3.up, dirToPlayer).normalized * strafeSign;
-
                 float errorRadio = (dist - distanciaSeguridad);
                 Vector3 correccion = dirToPlayer * (-errorRadio * fuerzaCorreccionRadio);
-
                 velDeseada = tangent * (velocidadMovimiento * velocidadOrbita) + correccion;
-            }
-            else
-            {
-                velDeseada = Vector3.zero;
             }
         }
 
-        // Separación entre árbitros
         velDeseada += CalcularSeparacion();
 
-        // Limitar velocidad horizontal
         Vector3 velPlano = new Vector3(velDeseada.x, 0f, velDeseada.z);
         float maxSpeed = Mathf.Max(0.1f, velocidadMovimiento * 1.35f);
         if (velPlano.magnitude > maxSpeed) velPlano = velPlano.normalized * maxSpeed;
@@ -138,6 +126,11 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         Vector3 pos = transform.position;
         pos.y = alturaInicial;
         transform.position = pos;
+
+        // Animación ← NUEVO
+        float speedAnim = enRangoDeteccion ? velPlano.magnitude : 0f;
+        if (animator != null)
+            animator.SetFloat("speed", speedAnim, 0.1f, Time.deltaTime);
 
         // Disparo
         bool enRangoDisparo = dist <= rangoDisparo && dist >= distanciaMinimaDisparo;
@@ -179,7 +172,6 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         if (count == 0) return Vector3.zero;
         separacion /= count;
-
         return separacion.normalized * fuerzaSeparacion;
     }
 
@@ -194,7 +186,6 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         GameObject obj = Instantiate(prefabTarjeta, origen, Quaternion.LookRotation(dir));
 
-        // Evitar que la tarjeta choque con el propio árbitro
         Collider colTarjeta = obj.GetComponent<Collider>();
         if (colTarjeta != null)
         {
@@ -203,8 +194,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
                 Physics.IgnoreCollision(colTarjeta, misColliders[i], true);
         }
 
-        // Elegir tipo de tarjeta (roja/amarilla)
-        bool roja = Random.value < probabilidadRoja; // Random.value ∈ [0..1] [web:192]
+        bool roja = Random.value < probabilidadRoja;
         int dano = roja ? danoRoja : danoAmarilla;
         Color color = roja ? colorRoja : colorAmarilla;
 
@@ -240,6 +230,3 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         }
     }
 }
-
-
-

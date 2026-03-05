@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a508541e7f0bc224d9dd9c3a15891ad0, type: 3}
+  m_Name: NivelConfig_1_2
+  m_EditorClassIdentifier: Assembly-CSharp::NivelConfig
+  nombreNivel: 
+  mundoIndex: 1
+  nivelIndex: 2
+  oleadas:
+  - {fileID: 11400000, guid: bc840469c5618874598d2a00e3776245, type: 2}

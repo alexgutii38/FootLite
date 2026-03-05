@@ -1,13 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-
 public class PlayerStats : MonoBehaviour
 {
-    
-    
-    
-    
     public int vidaActual;
 
     [Header("Leveling")]
@@ -19,18 +14,16 @@ public class PlayerStats : MonoBehaviour
     [Header("Stats del jugador")]
     public int vidaMaxima = 100;
     public float speed = 5.0f;
-
     public float danoProyectil = 20f;
-
     public float rangoDisparo = 15f;
-    public float cadenciaDisparo = 5f; 
-
-    public int cantidadDirecciones = 0; // 0 = solo hacia enemigos, >0 = modo circular
-
+    public float cadenciaDisparo = 5f;
+    public int cantidadDirecciones = 0;
     public float velocidadProyectil = 10f;
-
     public float suerte = 0f;
     public float regeneracionVida = 0f;
+
+    private float acumuladorRegeneracion = 0f; // ← NUEVO
+
     void Start()
     {
         nivel = 1;
@@ -41,32 +34,33 @@ public class PlayerStats : MonoBehaviour
 
     void Update()
     {
+        // ← BLOQUE CORREGIDO
         if (regeneracionVida > 0f && vidaActual < vidaMaxima)
         {
-            vidaActual += Mathf.RoundToInt(regeneracionVida * Time.deltaTime);
-            if (vidaActual > vidaMaxima)
-                vidaActual = vidaMaxima;
+            acumuladorRegeneracion += regeneracionVida * Time.deltaTime;
+
+            if (acumuladorRegeneracion >= 1f)
+            {
+                int cantidad = Mathf.FloorToInt(acumuladorRegeneracion);
+                vidaActual = Mathf.Min(vidaActual + cantidad, vidaMaxima);
+                acumuladorRegeneracion -= cantidad;
+                GameManager.Instancia?.ActualizarUI();
+            }
         }
     }
 
-    // Update is called once per frame
     public void RecibirDano(int dano)
     {
         vidaActual -= dano;
-        if (vidaActual < 0)
-            vidaActual = 0;
+        if (vidaActual < 0) vidaActual = 0;
 
         if (GameManager.Instancia != null)
         {
             GameManager.Instancia.ActualizarUI();
             if (vidaActual <= 0)
-            {
                 GameManager.Instancia.GameOver();
-            }
         }
     }
-
-
 
     public int ObtenerVidaActual()
     {
@@ -88,14 +82,11 @@ public class PlayerStats : MonoBehaviour
     void SubirNivel()
     {
         nivel++;
-        
         float nuevoObjetivo = 1.50f * Mathf.Pow(nivel + 3, 2);
         experienciaSiguienteNivel = Mathf.RoundToInt(nuevoObjetivo);
 
         LevelUpManager manager = FindFirstObjectByType<LevelUpManager>();
         if (manager != null)
-        {
             manager.MostrarOpciones(this);
-        }
     }
 }

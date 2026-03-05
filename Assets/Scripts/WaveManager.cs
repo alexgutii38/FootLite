@@ -7,16 +7,16 @@ public class WaveManager : MonoBehaviour
     public ParticleSystem particulaSpawn;
 
     [Header("Límites de spawn")]
-    public Renderer rendererSuelo;     // Arrastra aquí el suelo/campo (MeshRenderer o cualquier Renderer)
-    public float margenBorde = 1f;     // Para que no aparezca pegado a la pared
+    public Renderer rendererSuelo;
+    public float margenBorde = 1f;
 
     [Header("Suelo")]
-    public LayerMask groundLayer;      // Layer del suelo (Ground)
-    public float rayAltura = 50f;      // Desde cuánta altura lanzamos el rayo
-    public float offsetSuelo = 0.05f;  // Pequeño offset para que no “clave” el collider
+    public LayerMask groundLayer;
+    public float rayAltura = 50f;
+    public float offsetSuelo = 0.05f;
 
-    [Header("Base de datos")]
-    public List<WaveConfig> oleadas;
+    [Header("Base de datos de niveles")]
+    public List<NivelConfig> nivelesDisponibles; // ← Arrastra aquí los 9 NivelConfigs
 
     [Header("Referencias")]
     public Transform jugador;
@@ -25,12 +25,12 @@ public class WaveManager : MonoBehaviour
     [Header("Seguridad")]
     public int limiteMaximoEnemigos = 100;
 
+    private List<WaveConfig> oleadas = new List<WaveConfig>();
     private int indiceOleadaActual = 0;
     private float tiempoTranscurridoOleada = 0f;
     private float tiempoSiguienteSpawn = 0f;
     private WaveConfig oleadaActual;
 
-    // --- VARIABLES DE ESCALADO ---
     private int cicloCompleto = 0;
     private float multiplicadorDificultad = 1.0f;
 
@@ -39,7 +39,36 @@ public class WaveManager : MonoBehaviour
         if (jugador == null)
             jugador = GameObject.FindGameObjectWithTag("Player").transform;
 
+        CargarNivel();
         IniciarOleada(0);
+    }
+
+    void CargarNivel()
+    {
+        // Si no hay NivelManager usa la primera config disponible como fallback
+        if (NivelManager.Instancia == null)
+        {
+            if (nivelesDisponibles.Count > 0)
+                oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
+            return;
+        }
+
+        int mundo = NivelManager.Instancia.mundoSeleccionado;
+        int nivel = NivelManager.Instancia.nivelSeleccionado;
+
+        NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
+
+        if (config != null)
+        {
+            oleadas = new List<WaveConfig>(config.oleadas);
+            Debug.Log($"Cargando Mundo {mundo} - Nivel {nivel}: {config.nombreNivel}");
+        }
+        else
+        {
+            Debug.LogWarning($"No se encontró NivelConfig para Mundo {mundo} Nivel {nivel}");
+            if (nivelesDisponibles.Count > 0)
+                oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
+        }
     }
 
     void Update()
@@ -60,6 +89,8 @@ public class WaveManager : MonoBehaviour
 
     void IniciarOleada(int indice)
     {
+        if (oleadas.Count == 0) return;
+
         indice = indice % oleadas.Count;
 
         if (indice == 0 && indiceOleadaActual != 0)
@@ -92,7 +123,6 @@ public class WaveManager : MonoBehaviour
         float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
         int cantidad = oleadaActual.enemigosPorSpawn;
 
-        // Bounds del suelo (en mundo). Si no hay suelo asignado, spawnea relativo al jugador sin clamp.
         Bounds boundsSuelo = new Bounds();
         bool tieneBounds = false;
 
@@ -104,25 +134,21 @@ public class WaveManager : MonoBehaviour
 
         for (int i = 0; i < cantidad; i++)
         {
-            // 1) Posición candidata en XZ alrededor del jugador
             Vector2 puntoRandom = Random.insideUnitCircle.normalized * radioSpawn;
             Vector3 spawnPos = jugador.position + new Vector3(puntoRandom.x, 0f, puntoRandom.y);
 
-            // 2) Clamp dentro del suelo (solo X/Z)
             if (tieneBounds)
             {
                 spawnPos.x = Mathf.Clamp(spawnPos.x, boundsSuelo.min.x + margenBorde, boundsSuelo.max.x - margenBorde);
                 spawnPos.z = Mathf.Clamp(spawnPos.z, boundsSuelo.min.z + margenBorde, boundsSuelo.max.z - margenBorde);
             }
 
-            // 3) Raycast para calcular la Y real del suelo en ese X/Z
             float startY = tieneBounds ? (boundsSuelo.max.y + rayAltura) : (jugador.position.y + rayAltura);
             Vector3 rayStart = new Vector3(spawnPos.x, startY, spawnPos.z);
 
             RaycastHit hit;
             bool hitOk = false;
 
-            // Si groundLayer está en 0 (Nothing), raycastea contra todo.
             if (groundLayer.value == 0)
                 hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f);
             else
@@ -131,13 +157,11 @@ public class WaveManager : MonoBehaviour
             if (hitOk)
                 spawnPos.y = hit.point.y + offsetSuelo;
             else
-                spawnPos.y = jugador.position.y; // fallback si no encuentra suelo
+                spawnPos.y = jugador.position.y;
 
-            // 4) Instanciar enemigo
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
 
-            // Partícula de spawn
             if (particulaSpawn != null)
             {
                 ParticleSystem particulaObj = Instantiate(particulaSpawn, spawnPos, Quaternion.identity);
@@ -157,7 +181,6 @@ public class WaveManager : MonoBehaviour
                 colorOverLifetime.color = grad;
             }
 
-            // Escalado stats
             EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
             if (script != null)
             {
