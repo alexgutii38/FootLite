@@ -22,7 +22,7 @@ public class PlayerStats : MonoBehaviour
     public float suerte = 0f;
     public float regeneracionVida = 0f;
 
-    private float acumuladorRegeneracion = 0f; // ← NUEVO
+    private float acumuladorRegeneracion = 0f;
 
     void Start()
     {
@@ -34,7 +34,6 @@ public class PlayerStats : MonoBehaviour
 
     void Update()
     {
-        // ← BLOQUE CORREGIDO
         if (regeneracionVida > 0f && vidaActual < vidaMaxima)
         {
             acumuladorRegeneracion += regeneracionVida * Time.deltaTime;
@@ -77,6 +76,9 @@ public class PlayerStats : MonoBehaviour
             experienciaActual -= experienciaSiguienteNivel;
             SubirNivel();
         }
+        
+        // Actualizamos la UI para que la barra de experiencia se mueva
+        GameManager.Instancia?.ActualizarUI();
     }
 
     void SubirNivel()

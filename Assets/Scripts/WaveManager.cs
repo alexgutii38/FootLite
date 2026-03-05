@@ -16,7 +16,7 @@ public class WaveManager : MonoBehaviour
     public float offsetSuelo = 0.05f;
 
     [Header("Base de datos de niveles")]
-    public List<NivelConfig> nivelesDisponibles; // ← Arrastra aquí los 9 NivelConfigs
+    public List<NivelConfig> nivelesDisponibles;
 
     [Header("Referencias")]
     public Transform jugador;
@@ -45,7 +45,6 @@ public class WaveManager : MonoBehaviour
 
     void CargarNivel()
     {
-        // Si no hay NivelManager usa la primera config disponible como fallback
         if (NivelManager.Instancia == null)
         {
             if (nivelesDisponibles.Count > 0)
@@ -105,6 +104,12 @@ public class WaveManager : MonoBehaviour
         tiempoTranscurridoOleada = 0f;
 
         Debug.Log($"Oleada {indice + 1}/{oleadas.Count} (Ciclo {cicloCompleto + 1})");
+        
+        // Actualizamos el HUD
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.ActualizarTextoOleada(indiceOleadaActual + 1, oleadas.Count, cicloCompleto);
+        }
     }
 
     void PasarSiguienteOleada()
@@ -114,8 +119,9 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemigos()
     {
+        // Optimizado: Usamos el contador del GameManager en lugar de FindGameObjectsWithTag
         if (GameManager.Instancia != null && GameManager.Instancia.enemigosActivos >= limiteMaximoEnemigos)
-            return; 
+            return;
 
         if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0)
             return;
@@ -162,7 +168,11 @@ public class WaveManager : MonoBehaviour
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
 
-            if (GameManager.Instancia != null) GameManager.Instancia.AgregarEnemigoActivo();
+            // Sumamos un enemigo activo al contador
+            if (GameManager.Instancia != null) 
+            {
+                GameManager.Instancia.AgregarEnemigoActivo();
+            }
 
             if (particulaSpawn != null)
             {
