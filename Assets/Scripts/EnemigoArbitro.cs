@@ -218,15 +218,32 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         }
     }
 
-    public void RecibirDano(float cantidad)
+public void RecibirDano(float cantidad)
     {
         vida -= cantidad;
+        
+        // Solo entra aquí si el árbitro muere
         if (vida <= 0f)
         {
+            // Sumamos la kill AQUÍ ADENTRO
+            if (GameManager.Instancia != null)
+            {
+                GameManager.Instancia.SumarEliminado();
+            }
+
             if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
 
             Destroy(gameObject);
         }
     }
+    private void OnDestroy()
+    {
+        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.QuitarEnemigoActivo();
+        }
+    }
+
 }

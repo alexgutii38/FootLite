@@ -133,4 +133,12 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
             Destroy(gameObject);
         }
     }
+    private void OnDestroy()
+    {
+        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.QuitarEnemigoActivo();
+        }
+    }
 }

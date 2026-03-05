@@ -10,6 +10,20 @@ public class GameManager : MonoBehaviour
     [Header("Estado del jugador y partida")]
     //public int score = 0;
     public int enemigosEliminados = 0;
+
+    [Header("Optimización")]
+    public int enemigosActivos = 0;
+
+    public void AgregarEnemigoActivo()
+    {
+        enemigosActivos++;
+    }
+
+    public void QuitarEnemigoActivo()
+    {
+        enemigosActivos--;
+        if (enemigosActivos < 0) enemigosActivos = 0; // Seguridad para no tener números negativos
+    }
     
 
     [Header("Ronda / nivel / tiempo")]
@@ -127,7 +141,7 @@ public class GameManager : MonoBehaviour
         //if (textoScore != null)
             //textoScore.text = "Puntos: " + score;
         if (textoEnemigos != null)
-            textoEnemigos.text = "Eliminados: " + enemigosEliminados;
+            textoEnemigos.text = "Kills: " + enemigosEliminados;
         //if (textoRonda != null)
             //textoRonda.text = "Ronda: " + nivel;
     }
@@ -145,6 +159,7 @@ public class GameManager : MonoBehaviour
     {
         // Reiniciar variables si es necesario
         enemigosEliminados = 0;
+        enemigosActivos = 0;
         tiempoPartida = 0f;
         juegoEnPausa = false;
 

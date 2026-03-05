@@ -114,8 +114,8 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemigos()
     {
-        if (GameObject.FindGameObjectsWithTag("Enemigo").Length >= limiteMaximoEnemigos)
-            return;
+        if (GameManager.Instancia != null && GameManager.Instancia.enemigosActivos >= limiteMaximoEnemigos)
+            return; 
 
         if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0)
             return;
@@ -161,6 +161,8 @@ public class WaveManager : MonoBehaviour
 
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+            if (GameManager.Instancia != null) GameManager.Instancia.AgregarEnemigoActivo();
 
             if (particulaSpawn != null)
             {
