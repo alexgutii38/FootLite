@@ -1,27 +1,37 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton: acceso global fácil
     public static GameManager Instancia;
 
     [Header("Estado del jugador y partida")]
-    //public int score = 0;
     public int enemigosEliminados = 0;
-    
+
+    [Header("Optimización")]
+    public int enemigosActivos = 0; 
 
     [Header("Ronda / nivel / tiempo")]
-    //*public int nivel = 1;
     public float tiempoPartida = 0f;
     public bool juegoEnPausa = false;
+    
+    [Header("Condición de Victoria (Modo Supervivencia)")]
+    public float tiempoParaGanar = 480f; // 480 segundos = 8 minutos
+    public bool nivelCompletado = false;
+    public GameObject panelVictoria; // <-- NUEVO PANEL
 
     [Header("Referencias de UI")]
     public TextMeshProUGUI textoVida;
-    public TextMeshProUGUI textoScore;
     public TextMeshProUGUI textoEnemigos;
-    public TextMeshProUGUI textoRonda;
+    public TextMeshProUGUI textoRonda; 
+    
+    [Header("Nuevos Elementos HUD")]
+    public TextMeshProUGUI textoTiempo;
+    public TextMeshProUGUI textoNivelJugador;
+    public Slider sliderExperiencia;
+
     public GameObject panelGameOver;
     public PlayerStats playerStats;
 
@@ -48,13 +58,11 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-
     void Start()
     {
-        
         ActualizarUI();
-        if (panelGameOver != null)
-            panelGameOver.SetActive(false);
+        if (panelGameOver != null) panelGameOver.SetActive(false);
+        if (panelVictoria != null) panelVictoria.SetActive(false);
     }
 
     void Update()
@@ -62,10 +70,21 @@ public class GameManager : MonoBehaviour
         if (!juegoEnPausa)
         {
             tiempoPartida += Time.deltaTime;
-        }
-        ActualizarUI();
 
-        // Ejemplo: Pausa con Escape
+            if (textoTiempo != null)
+            {
+                int minutos = Mathf.FloorToInt(tiempoPartida / 60F);
+                int segundos = Mathf.FloorToInt(tiempoPartida - minutos * 60);
+                textoTiempo.text = string.Format("{0:00}:{1:00}", minutos, segundos);
+            }
+
+            // <-- NUEVO: Comprobar si hemos llegado a los 8 minutos
+            if (!nivelCompletado && tiempoPartida >= tiempoParaGanar)
+            {
+                CompletarNivel();
+            }
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             PausarJuego(!juegoEnPausa);
@@ -74,41 +93,53 @@ public class GameManager : MonoBehaviour
 
     void OnSceneLoaded(Scene escena, LoadSceneMode modo)
     {
-        // Reiniciar valores al cargar una nueva escena
         ReiniciarContadores();
-        enemigosEliminados = 0;
-        tiempoPartida = 0f;
+        ReiniciarValores();
         ActualizarUI();
     }
 
-    /*public void SumarPuntos(int cantidad)
+    // --- NUEVOS MÉTODOS DE VICTORIA ---
+    public void CompletarNivel()
     {
-        score += cantidad;
-        ActualizarUI();
-    }*/
+        nivelCompletado = true;
+        if (panelVictoria != null)
+        {
+            panelVictoria.SetActive(true);
+        }
+        PausarJuego(true); // Pausamos para que el jugador elija qué hacer
+    }
+
+    public void ContinuarModoInfinito()
+    {
+        if (panelVictoria != null) panelVictoria.SetActive(false);
+        PausarJuego(false);
+    }
+
+    public void SalirAlMenu()
+    {
+        PausarJuego(false);
+        SceneManager.LoadScene("EscenaTitulo"); 
+    }
+    // ----------------------------------
+
+    public void AgregarEnemigoActivo() { enemigosActivos++; }
+
+    public void QuitarEnemigoActivo()
+    {
+        enemigosActivos--;
+        if (enemigosActivos < 0) enemigosActivos = 0;
+    }
 
     public void SumarEliminado()
     {
         enemigosEliminados++;
         ActualizarUI();
     }
-    
-    /*public void RestablecerVidaJugador(float cantidadMax)
-    {
-        vidaJugadorActual = cantidadMax;
-        ActualizarUI();
-    }
-    public void SubirRonda()
-    {
-        nivel++;
-        ActualizarUI();
-    }*/
 
     public void PausarJuego(bool pausar)
     {
         juegoEnPausa = pausar;
         Time.timeScale = pausar ? 0f : 1f;
-        // Aquí puedes mostrar/ocultar menú de pausa
     }
 
     public void GameOver()
@@ -116,42 +147,46 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("EscenaDerrota");
     }
 
-    // ---- UI ----
     public void ActualizarUI()
     {
-        if(playerStats == null)
-            playerStats = FindFirstObjectByType<PlayerStats>();
+        if(playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
 
-        if (textoVida != null)
-          textoVida.text = "Vida: " + (playerStats != null ? playerStats.vidaActual: 0);
-        //if (textoScore != null)
-            //textoScore.text = "Puntos: " + score;
-        if (textoEnemigos != null)
-            textoEnemigos.text = "Eliminados: " + enemigosEliminados;
-        //if (textoRonda != null)
-            //textoRonda.text = "Ronda: " + nivel;
+        if (textoVida != null) textoVida.text = "Vida: " + (playerStats != null ? playerStats.vidaActual: 0);
+        if (textoEnemigos != null) textoEnemigos.text = "Muertes: " + enemigosEliminados;
+
+        if (playerStats != null)
+        {
+            if (textoNivelJugador != null) textoNivelJugador.text = "Nivel: " + playerStats.nivel;
+            if (sliderExperiencia != null)
+            {
+                sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
+                sliderExperiencia.value = playerStats.experienciaActual;
+            }
+        }
     }
 
-    // Métodos para power-ups (ejemplo)
-    /*public void AplicarPowerup(string tipo)
+    public void ActualizarTextoOleada(int oleada, int total, int ciclo)
     {
-        // Ejemplo: switch/case para distintos power-up
-        if (tipo == "vida") RestablecerVidaJugador(100);
-        else if (tipo == "puntos") SumarPuntos(50);
-        // etc.
-    }*/
+        if (textoRonda != null)
+        {
+            string texto = $"Oleada: {oleada}/{total}";
+            if (ciclo > 0) texto += $" (Ciclo {ciclo + 1})";
+            textoRonda.text = texto;
+        }
+    }
 
     public void ReiniciarValores()
     {
-        // Reiniciar variables si es necesario
         enemigosEliminados = 0;
+        enemigosActivos = 0; 
         tiempoPartida = 0f;
+        nivelCompletado = false; // <-- Resetear condición de victoria
         juegoEnPausa = false;
+        
+        if (panelVictoria != null) panelVictoria.SetActive(false);
 
-        if(playerStats == null)
-            playerStats = FindFirstObjectByType<PlayerStats>();
-        if(playerStats != null)
-            playerStats.vidaActual = playerStats.vidaMaxima;
+        if(playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
+        if(playerStats != null) playerStats.vidaActual = playerStats.vidaMaxima;
 
         ActualizarUI();
     }
@@ -159,14 +194,9 @@ public class GameManager : MonoBehaviour
     public void ReiniciarContadores()
     {
         GameObject objVida = GameObject.Find("textoVida");
-        if (objVida != null)
-        {
-            textoVida = objVida.GetComponent<TextMeshProUGUI>();
-    }
+        if (objVida != null) textoVida = objVida.GetComponent<TextMeshProUGUI>();
+        
         GameObject objEnemigos = GameObject.Find("textoEnemigos");
-        if (objEnemigos != null)
-        {
-            textoEnemigos = objEnemigos.GetComponent<TextMeshProUGUI>();
-        }
+        if (objEnemigos != null) textoEnemigos = objEnemigos.GetComponent<TextMeshProUGUI>();
     }
 }

@@ -98,11 +98,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2d6796e3ccb1d14c8dcf0dd163fe02d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemigoArbitro
+  prefabGemaExperiencia: {fileID: 3938860230655451633, guid: c5004cc318476634eaaf4459add7eb66, type: 3}
+  prefabCofre: {fileID: 7963787656424768104, guid: 904046a896d6bae41956ceacba528f61, type: 3}
+  probabilidadGema: 0.8
+  probabilidadCofre: 0.05
   vida: 100
   velocidadMovimiento: 2.4
   danoPorContacto: 6
   tiempoEntreDanos: 0.6
   rangoDeteccion: 120
+  experienciaAlMorir: 25
   distanciaSeguridad: 5
   histeresis: 0.25
   prefabTarjeta: {fileID: 4475654984264824302, guid: 0837a73e42bb88c47ab7d2a1358be27c, type: 3}
@@ -127,7 +132,8 @@ MonoBehaviour:
   cambioLadoCada: 2.5
   probCambioLado: 0.35
   animator: {fileID: 1420853583693288901}
-  efectoMuerte: {fileID: 0}
+  efectoMuerte: {fileID: 1429954232896169632, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
+  "prefabTextoDa\xF1o": {fileID: 535799961814499386, guid: d8456a423ff8f3041a18674f3165abec, type: 3}
 --- !u!1 &3148996011496201111
 GameObject:
   m_ObjectHideFlags: 0

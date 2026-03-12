@@ -16,7 +16,7 @@ public class WaveManager : MonoBehaviour
     public float offsetSuelo = 0.05f;
 
     [Header("Base de datos de niveles")]
-    public List<NivelConfig> nivelesDisponibles; // ← Arrastra aquí los 9 NivelConfigs
+    public List<NivelConfig> nivelesDisponibles;
 
     [Header("Referencias")]
     public Transform jugador;
@@ -33,6 +33,9 @@ public class WaveManager : MonoBehaviour
 
     private int cicloCompleto = 0;
     private float multiplicadorDificultad = 1.0f;
+    
+    // <-- NUEVO: Dificultad basada en el mundo y nivel seleccionado
+    private float dificultadBaseDelNivel = 1.0f; 
 
     void Start()
     {
@@ -45,11 +48,9 @@ public class WaveManager : MonoBehaviour
 
     void CargarNivel()
     {
-        // Si no hay NivelManager usa la primera config disponible como fallback
         if (NivelManager.Instancia == null)
         {
-            if (nivelesDisponibles.Count > 0)
-                oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
+            if (nivelesDisponibles.Count > 0) oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
             return;
         }
 
@@ -58,16 +59,20 @@ public class WaveManager : MonoBehaviour
 
         NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
 
+        // <-- NUEVO: Calcular la dificultad base. 
+        // Ejemplo: Mundo 2 es 50% más difícil que Mundo 1. Nivel 2 es 20% más difícil que Nivel 1.
+        dificultadBaseDelNivel = 1f + ((mundo - 1) * 0.5f) + ((nivel - 1) * 0.2f);
+        multiplicadorDificultad = dificultadBaseDelNivel; 
+
         if (config != null)
         {
             oleadas = new List<WaveConfig>(config.oleadas);
-            Debug.Log($"Cargando Mundo {mundo} - Nivel {nivel}: {config.nombreNivel}");
+            Debug.Log($"Cargando Mundo {mundo} - Nivel {nivel}: {config.nombreNivel} | Dificultad Base: {dificultadBaseDelNivel}x");
         }
         else
         {
             Debug.LogWarning($"No se encontró NivelConfig para Mundo {mundo} Nivel {nivel}");
-            if (nivelesDisponibles.Count > 0)
-                oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
+            if (nivelesDisponibles.Count > 0) oleadas = new List<WaveConfig>(nivelesDisponibles[0].oleadas);
         }
     }
 
@@ -96,15 +101,19 @@ public class WaveManager : MonoBehaviour
         if (indice == 0 && indiceOleadaActual != 0)
         {
             cicloCompleto++;
-            multiplicadorDificultad = Mathf.Pow(1.15f, cicloCompleto);
-            Debug.Log($"=== CICLO {cicloCompleto + 1} === Multiplicador: {multiplicadorDificultad:F2}x");
+            // <-- NUEVO: Multiplicamos la dificultad base del nivel por el aumento cíclico del modo infinito
+            multiplicadorDificultad = dificultadBaseDelNivel * Mathf.Pow(1.15f, cicloCompleto);
+            Debug.Log($"=== CICLO {cicloCompleto + 1} (INFINITO) === Multiplicador Total: {multiplicadorDificultad:F2}x");
         }
 
         indiceOleadaActual = indice;
         oleadaActual = oleadas[indice];
         tiempoTranscurridoOleada = 0f;
 
-        Debug.Log($"Oleada {indice + 1}/{oleadas.Count} (Ciclo {cicloCompleto + 1})");
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.ActualizarTextoOleada(indiceOleadaActual + 1, oleadas.Count, cicloCompleto);
+        }
     }
 
     void PasarSiguienteOleada()
@@ -114,11 +123,8 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemigos()
     {
-        if (GameObject.FindGameObjectsWithTag("Enemigo").Length >= limiteMaximoEnemigos)
-            return;
-
-        if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0)
-            return;
+        if (GameManager.Instancia != null && GameManager.Instancia.enemigosActivos >= limiteMaximoEnemigos) return;
+        if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0) return;
 
         float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
         int cantidad = oleadaActual.enemigosPorSpawn;
@@ -149,18 +155,16 @@ public class WaveManager : MonoBehaviour
             RaycastHit hit;
             bool hitOk = false;
 
-            if (groundLayer.value == 0)
-                hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f);
-            else
-                hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f, groundLayer);
+            if (groundLayer.value == 0) hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f);
+            else hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f, groundLayer);
 
-            if (hitOk)
-                spawnPos.y = hit.point.y + offsetSuelo;
-            else
-                spawnPos.y = jugador.position.y;
+            if (hitOk) spawnPos.y = hit.point.y + offsetSuelo;
+            else spawnPos.y = jugador.position.y;
 
             GameObject prefab = oleadaActual.prefabsEnemigos[Random.Range(0, oleadaActual.prefabsEnemigos.Length)];
             GameObject enemigo = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+            if (GameManager.Instancia != null) GameManager.Instancia.AgregarEnemigoActivo();
 
             if (particulaSpawn != null)
             {
@@ -170,26 +174,47 @@ public class WaveManager : MonoBehaviour
 
                 var colorOverLifetime = particulaObj.colorOverLifetime;
                 Gradient grad = new Gradient();
-                grad.colorKeys = new GradientColorKey[] {
-                    new GradientColorKey(Color.white, 0f),
-                    new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f)
-                };
-                grad.alphaKeys = new GradientAlphaKey[] {
-                    new GradientAlphaKey(1f, 0f),
-                    new GradientAlphaKey(0f, 1f)
-                };
+                grad.colorKeys = new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f) };
+                grad.alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) };
                 colorOverLifetime.color = grad;
             }
 
-            EnemigoCaminante script = enemigo.GetComponent<EnemigoCaminante>();
-            if (script != null)
+ // 1. Intentamos escalar si es un Caminante
+            EnemigoCaminante scriptCam = enemigo.GetComponent<EnemigoCaminante>();
+            if (scriptCam != null)
             {
-                script.vida *= dificultadTotal;
-                script.danoPorContacto = Mathf.RoundToInt(script.danoPorContacto * dificultadTotal * 0.8f);
-                script.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                script.velocidadMovimiento = Mathf.Min(script.velocidadMovimiento, 5.5f);
-                script.experienciaAlMorir = Mathf.RoundToInt(script.experienciaAlMorir * dificultadTotal);
+                scriptCam.vida *= dificultadTotal;
+                scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.8f);
+                scriptCam.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptCam.velocidadMovimiento = Mathf.Min(scriptCam.velocidadMovimiento, 5.5f);
+                scriptCam.experienciaAlMorir = Mathf.RoundToInt(scriptCam.experienciaAlMorir * dificultadTotal);
             }
-        }
-    }
-}
+
+            // 2. Intentamos escalar si es un Delantero
+            EnemigoDelantero scriptDel = enemigo.GetComponent<EnemigoDelantero>();
+            if (scriptDel != null)
+            {
+                scriptDel.vida *= dificultadTotal;
+                scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.8f);
+                scriptDel.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptDel.velocidadMovimiento = Mathf.Min(scriptDel.velocidadMovimiento, 5.5f);
+                scriptDel.experienciaAlMorir = Mathf.RoundToInt(scriptDel.experienciaAlMorir * dificultadTotal);
+            }
+
+            // 3. Intentamos escalar si es un Árbitro
+            EnemigoArbitro scriptArb = enemigo.GetComponent<EnemigoArbitro>();
+            if (scriptArb != null)
+            {
+                scriptArb.vida *= dificultadTotal;
+                scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.8f);
+                scriptArb.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
+                scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento, 5.5f);
+                scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
+                
+                // Extra: Hacemos que sus tarjetas rojas y amarillas también duelan más
+                scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
+                scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
+            }
+        } // <-- Aquí acaba el bucle for
+    } // <-- Aquí acaba el método SpawnEnemigos
+} // <-- Aquí acaba la clase WaveManager

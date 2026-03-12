@@ -3,6 +3,13 @@ using UnityEngine;
 
 public class EnemigoDelantero : MonoBehaviour, IDamageable
 {
+
+    [Header("Drops (Botín)")]
+    public GameObject prefabGemaExperiencia;
+    public GameObject prefabCofre;
+    [Range(0f, 1f)] public float probabilidadGema = 0.8f;   // 80% de soltar gema
+    [Range(0f, 1f)] public float probabilidadCofre = 0.05f; // 5% de soltar cofre
+
     [Header("Atributos escalables")]
     public float vida = 50f;
     public float velocidadMovimiento = 5f;
@@ -108,29 +115,47 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
         }
     }
 
-    public void RecibirDano(float cantidad)
-    {
-        if (prefabTextoDaño != null)
-        {
-            ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
-            CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
-            if (scriptTexto != null)
-                scriptTexto.MostrarValorDaño(cantidad);
-        }
-
-        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-        vida -= cantidad;
+public void RecibirDano(float cantidad)
+    {   
+        vida -= cantidad; // <-- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
 
         if (vida <= 0f)
         {
-            GameManager.Instancia.SumarEliminado();
-            if (ps != null)
-                ps.GanarExperiencia(experienciaAlMorir);
+            if (GameManager.Instancia != null)
+            {
+                GameManager.Instancia.SumarEliminado();
+            }
+
+            // --- NUEVO SISTEMA DE DROPS ---
+            // 1. Comprobamos si hay suerte y soltamos un cofre (aparece un poco por encima del suelo)
+            if (prefabCofre != null && Random.value <= probabilidadCofre)
+            {
+                Instantiate(prefabCofre, transform.position + Vector3.up * 0.1f, Quaternion.identity);
+            }
+            // 2. Si no hay cofre, comprobamos si suelta una gema normal
+            else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
+            {
+                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.1f, Quaternion.identity);
+                GemaExperiencia scriptGema = gema.GetComponent<GemaExperiencia>();
+                if (scriptGema != null)
+                {
+                    scriptGema.cantidadExperiencia = experienciaAlMorir; 
+                }
+            }
+            // ------------------------------
 
             if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
 
             Destroy(gameObject);
+        }
+    }
+    private void OnDestroy()
+    {
+        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.QuitarEnemigoActivo();
         }
     }
 }
