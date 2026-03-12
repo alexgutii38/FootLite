@@ -244,6 +244,18 @@ public void RecibirDano(float cantidad)
         // 2. Restar la vida real
         vida -= cantidad;
 
+        // --- EFECTO KNOCKBACK (Peso de las balas) ---
+        GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
+        if (jugadorObj != null)
+        {
+            Vector3 direccionEmpuje = (transform.position - jugadorObj.transform.position).normalized;
+            direccionEmpuje.y = 0f; // Evitamos que salgan volando hacia arriba
+            
+            // Les damos un pequeño empujón de 25 centímetros hacia atrás
+            transform.position += direccionEmpuje * 0.25f; 
+        }
+        // --------------------------------------------
+
         // 3. Comprobar si muere
         if (vida <= 0f)
         {

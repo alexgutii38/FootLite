@@ -818,6 +818,11 @@ Transform:
   - {fileID: 467969322}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &268786047 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7918335002988649766, guid: 4509d87942e06f34683203423af09eda, type: 3}
+  m_PrefabInstance: {fileID: 994928613}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &345639817
 GameObject:
   m_ObjectHideFlags: 0
@@ -4681,7 +4686,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   particulaSpawn: {fileID: 5824670795371433368, guid: f6fd568b816c64943a44efc3add3a881, type: 3}
-  rendererSuelo: {fileID: 1821724126}
+  rendererSuelo: {fileID: 268786047}
   margenBorde: 1
   groundLayer:
     serializedVersion: 2
