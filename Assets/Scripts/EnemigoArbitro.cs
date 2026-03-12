@@ -1,7 +1,15 @@
 using UnityEngine;
+using CartoonFX;
 
 public class EnemigoArbitro : MonoBehaviour, IDamageable
 {
+    
+    [Header("Drops (Botín)")]
+    public GameObject prefabGemaExperiencia;
+    public GameObject prefabCofre;
+    [Range(0f, 1f)] public float probabilidadGema = 0.8f;   // 80% de soltar gema
+    [Range(0f, 1f)] public float probabilidadCofre = 0.05f; // 5% de soltar cofre
+
     [Header("Stats")]
     public float vida = 40f;
     public float velocidadMovimiento = 2.4f;
@@ -48,6 +56,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
     [Header("FX opcional")]
     public ParticleSystem efectoMuerte;
+    public ParticleSystem prefabTextoDaño;
 
     private Transform jugador;
     private float alturaInicial;
@@ -221,7 +230,21 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
 public void RecibirDano(float cantidad)
     {
+        // 1. Mostrar el texto de daño visual
+        if (prefabTextoDaño != null)
+        {
+            ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
+            CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
+            if (scriptTexto != null)
+            {
+                scriptTexto.MostrarValorDaño(cantidad);
+            }
+        }
+
+        // 2. Restar la vida real
         vida -= cantidad;
+
+        // 3. Comprobar si muere
         if (vida <= 0f)
         {
             if (GameManager.Instancia != null)
@@ -229,12 +252,21 @@ public void RecibirDano(float cantidad)
                 GameManager.Instancia.SumarEliminado();
             }
 
-            // <-- NUEVAS LÍNEAS: Buscar al jugador y darle la XP
-            PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-            if (ps != null)
+            // --- SISTEMA DE DROPS ---
+            if (prefabCofre != null && Random.value <= probabilidadCofre)
             {
-                ps.GanarExperiencia(experienciaAlMorir);
+                Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
             }
+            else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
+            {
+                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.3f, Quaternion.identity);
+                GemaExperiencia scriptGema = gema.GetComponent<GemaExperiencia>();
+                if (scriptGema != null)
+                {
+                    scriptGema.cantidadExperiencia = experienciaAlMorir; 
+                }
+            }
+            // ------------------------
 
             if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
