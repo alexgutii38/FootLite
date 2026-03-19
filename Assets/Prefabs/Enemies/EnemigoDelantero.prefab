@@ -108,6 +108,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63f28bd0fbe3a234595b7e22f96f83ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemigoDelantero
+  prefabGemaExperiencia: {fileID: 3938860230655451633, guid: c5004cc318476634eaaf4459add7eb66, type: 3}
+  prefabCofre: {fileID: 7963787656424768104, guid: 904046a896d6bae41956ceacba528f61, type: 3}
+  probabilidadGema: 0.8
+  probabilidadCofre: 0.05
   vida: 50
   velocidadMovimiento: 5
   experienciaAlMorir: 20
