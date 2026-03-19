@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class EnemigoCaminante : MonoBehaviour, IDamageable
 {
+
+    [Header("Drops (Botín)")]
+    public GameObject prefabGemaExperiencia;
+    public GameObject prefabCofre;
+    [Range(0f, 1f)] public float probabilidadGema = 0.8f;   // 80% de soltar gema
+    [Range(0f, 1f)] public float probabilidadCofre = 0.05f; // 5% de soltar cofre
     // ==== NUEVO ====
     [Header("Atributos escalables")]
     public float vida = 50f;
@@ -115,36 +121,63 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
 
     // ==== NUEVO ====
     // Recibir daño y muerte
-    public void RecibirDano(float cantidad)
+public void RecibirDano(float cantidad)
     {
+        // 1. Mostrar texto de daño
         if (prefabTextoDaño != null)
         {
             ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
-
             CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
-            if(scriptTexto != null)
-            {
+            if (scriptTexto != null)
                 scriptTexto.MostrarValorDaño(cantidad);
-            }
         }
 
-        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
-
+        // 2. Restar vida
         vida -= cantidad;
 
-        if(vida <= 0f)
+        // --- EFECTO KNOCKBACK (Peso de las balas) ---
+        GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
+        if (jugadorObj != null)
         {
-            GameManager.Instancia.SumarEliminado();
-            if(ps != null)
+            Vector3 direccionEmpuje = (transform.position - jugadorObj.transform.position).normalized;
+            direccionEmpuje.y = 0f; // Evitamos que salgan volando hacia arriba
+            
+            // Les damos un pequeño empujón de 25 centímetros hacia atrás
+            transform.position += direccionEmpuje * 0.25f; 
+        }
+        // --------------------------------------------
+
+        // 3. Morir y soltar objetos
+        if (vida <= 0f)
+        {
+            if (GameManager.Instancia != null)
+                GameManager.Instancia.SumarEliminado();
+
+            // Soltar Cofre o Gema a la altura correcta (0.3f)
+            if (prefabCofre != null && Random.value <= probabilidadCofre)
             {
-                ps.GanarExperiencia(experienciaAlMorir);
+                Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
+            }
+            else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
+            {
+                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.3f, Quaternion.identity);
+                GemaExperiencia scriptGema = gema.GetComponent<GemaExperiencia>();
+                if (scriptGema != null)
+                    scriptGema.cantidadExperiencia = experienciaAlMorir;
             }
 
-            if(efectoMuerte != null)
-            {
+            if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
-            }
+
             Destroy(gameObject);
-        } 
+        }
+    }
+    private void OnDestroy()
+    {
+        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
+        if (GameManager.Instancia != null)
+        {
+            GameManager.Instancia.QuitarEnemigoActivo();
+        }
     }
 }
