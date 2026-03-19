@@ -1808,6 +1808,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 392490081}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a87f7526c8e50b74eb3aa90ff1ceddac, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a87f7526c8e50b74eb3aa90ff1ceddac, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a87f7526c8e50b74eb3aa90ff1ceddac, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a87f7526c8e50b74eb3aa90ff1ceddac, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -4009,7 +4021,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.03773582, g: 0.036133826, b: 0.036133826, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4347,6 +4359,7 @@ GameObject:
   - component: {fileID: 1688729257}
   - component: {fileID: 1688729259}
   - component: {fileID: 1688729258}
+  - component: {fileID: 1688729260}
   m_Layer: 5
   m_Name: LevelUpPanel
   m_TagString: Untagged
@@ -4415,6 +4428,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1688729256}
   m_CullTransparentMesh: 1
+--- !u!114 &1688729260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688729256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 135ba9afd4ba9e34d89ff93c971e010c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnimacionPanel
 --- !u!1 &1821724124
 GameObject:
   m_ObjectHideFlags: 0
