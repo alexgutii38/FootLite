@@ -8,7 +8,7 @@ public class GemaManager : MonoBehaviour
     public float probabilidadPowerUp = 0.3f; // 30% para power-ups
 
     [Header("Prefabs")]
-    public GameObject gemaXP; // La que sale SIEMPRE
+    public GameObject gemaExperiencia; // La que sale SIEMPRE
     public GameObject[] powerUps = new GameObject[4]; // Las 4 power-ups (sin XP)
 
     private void Awake()
@@ -24,9 +24,9 @@ public class GemaManager : MonoBehaviour
     public void GenerarGemas(Vector3 posicion)
     {
         // 1. SIEMPRE suelta XP
-        if (gemaXP != null)
+        if (gemaExperiencia != null)
         {
-            GameObject xp = Instantiate(gemaXP, posicion + Vector3.up * 0.5f, Quaternion.identity);
+            GameObject xp = Instantiate(gemaExperiencia, posicion + Vector3.up * 0.5f, Quaternion.identity);
             // Física automática si ya la tiene configurada
         }
 

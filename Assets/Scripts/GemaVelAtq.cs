@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class GemaVida : MonoBehaviour
+public class GemaVelAtq : MonoBehaviour
 {
     [HideInInspector] 
-    public float cantidadVida = 5f;
+    public float cantidadVelAtq = 5f;
 
     [Header("Imán de Gemas")]
     public float rangoAtraccion = 3.5f;
@@ -52,10 +52,11 @@ public class GemaVida : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             PlayerStats ps = other.GetComponent<PlayerStats>();
-            if (ps != null) ps.ModificarVida(cantidadVida);
+            if (ps != null) ps.ModificarVelAtq(cantidadVelAtq);
             
             Destroy(gameObject);
         }
     }
 }
+
 
