@@ -122,33 +122,49 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
     // ==== NUEVO ====
     // Recibir daño y muerte
 public void RecibirDano(float cantidad)
-    {   
-        vida -= cantidad; // <-- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
+    {
+        // 1. Mostrar texto de daño
+        if (prefabTextoDaño != null)
+        {
+            ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
+            CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
+            if (scriptTexto != null)
+                scriptTexto.MostrarValorDaño(cantidad);
+        }
 
+        // 2. Restar vida
+        vida -= cantidad;
+
+        // --- EFECTO KNOCKBACK (Peso de las balas) ---
+        GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
+        if (jugadorObj != null)
+        {
+            Vector3 direccionEmpuje = (transform.position - jugadorObj.transform.position).normalized;
+            direccionEmpuje.y = 0f; // Evitamos que salgan volando hacia arriba
+            
+            // Les damos un pequeño empujón de 25 centímetros hacia atrás
+            transform.position += direccionEmpuje * 0.25f; 
+        }
+        // --------------------------------------------
+
+        // 3. Morir y soltar objetos
         if (vida <= 0f)
         {
             if (GameManager.Instancia != null)
-            {
                 GameManager.Instancia.SumarEliminado();
-            }
 
-            // --- NUEVO SISTEMA DE DROPS ---
-            // 1. Comprobamos si hay suerte y soltamos un cofre (aparece un poco por encima del suelo)
+            // Soltar Cofre o Gema a la altura correcta (0.3f)
             if (prefabCofre != null && Random.value <= probabilidadCofre)
             {
-                Instantiate(prefabCofre, transform.position + Vector3.up * 0.1f, Quaternion.identity);
+                Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
             }
-            // 2. Si no hay cofre, comprobamos si suelta una gema normal
             else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
             {
-                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.1f, Quaternion.identity);
+                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.3f, Quaternion.identity);
                 GemaExperiencia scriptGema = gema.GetComponent<GemaExperiencia>();
                 if (scriptGema != null)
-                {
-                    scriptGema.cantidadExperiencia = experienciaAlMorir; 
-                }
+                    scriptGema.cantidadExperiencia = experienciaAlMorir;
             }
-            // ------------------------------
 
             if (efectoMuerte != null)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);

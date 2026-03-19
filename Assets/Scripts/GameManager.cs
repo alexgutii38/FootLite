@@ -69,6 +69,14 @@ public class GameManager : MonoBehaviour
     {
         if (!juegoEnPausa)
         {
+
+            // --- ANIMACIÓN SUAVE DE LA BARRA DE EXPERIENCIA ---
+        if (sliderExperiencia != null && playerStats != null)
+        {
+            sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
+            // Lerp hace que persiga el valor real suavemente. Usamos unscaledDeltaTime por si el juego se pausa al subir de nivel.
+            sliderExperiencia.value = Mathf.Lerp(sliderExperiencia.value, playerStats.experienciaActual, Time.unscaledDeltaTime * 10f);
+        }
             tiempoPartida += Time.deltaTime;
 
             if (textoTiempo != null)
@@ -160,7 +168,7 @@ public class GameManager : MonoBehaviour
             if (sliderExperiencia != null)
             {
                 sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
-                sliderExperiencia.value = playerStats.experienciaActual;
+                //sliderExperiencia.value = playerStats.experienciaActual;
             }
         }
     }
