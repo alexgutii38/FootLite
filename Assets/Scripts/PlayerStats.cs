@@ -77,7 +77,6 @@ public class PlayerStats : MonoBehaviour
             SubirNivel();
         }
         
-        // Actualizamos la UI para que la barra de experiencia se mueva
         GameManager.Instancia?.ActualizarUI();
     }
 
@@ -91,4 +90,37 @@ public class PlayerStats : MonoBehaviour
         if (manager != null)
             manager.MostrarOpciones(this);
     }
+
+    // MÉTODOS PARA GEMAS
+    public void ModificarDano(float cantidad)
+    {
+        danoProyectil += cantidad;
+        Debug.Log($"Daño aumentado a: {danoProyectil}");
+    }
+
+    public void ModificarEscudo(float cantidad)
+    {
+        vidaMaxima += (int)cantidad;
+        vidaActual += (int)cantidad;
+        Debug.Log($"Vida máxima aumentada a: {vidaMaxima}");
+    }
+
+    public void ModificarCadencia(float cantidad)
+    {
+        cadenciaDisparo = Mathf.Max(0.1f, cadenciaDisparo - cantidad);
+        Debug.Log($"Cadencia mejorada a: {cadenciaDisparo}s");
+    }
+
+    public void Curar(float cantidad)
+    {
+        vidaActual = Mathf.Min(vidaMaxima, vidaActual + (int)cantidad);
+        Debug.Log($"Curado +{(int)cantidad} HP");
+    }
+    public void ModificarEscudo(float cantidad)
+    {
+    vidaMaxima += (int)cantidad;
+    vidaActual += (int)cantidad;
+    Debug.Log($"Vida máxima aumentada a: {vidaMaxima}");
+    }
+
 }

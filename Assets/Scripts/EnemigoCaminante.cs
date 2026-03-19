@@ -177,7 +177,7 @@ public void RecibirDano(float cantidad)
         // Al destruirse (por morir o al cambiar de escena), se resta del contador global
         if (GameManager.Instancia != null)
         {
-            GameManager.Instancia.QuitarEnemigoActivo();
+            GemaManager.Instance.GenerarGemas(transform.position);
         }
     }
 }
