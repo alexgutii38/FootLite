@@ -24,12 +24,15 @@ public class PlayerStats : MonoBehaviour
 
     private float acumuladorRegeneracion = 0f;
 
+    private VignetteDano vignette;
+
     void Start()
     {
         nivel = 1;
         experienciaActual = 0;
         experienciaSiguienteNivel = Mathf.RoundToInt(Mathf.Pow(nivel + 3, 2));
         vidaActual = vidaMaxima;
+        vignette = FindFirstObjectByType<VignetteDano>();
     }
 
     void Update()
@@ -51,6 +54,7 @@ public class PlayerStats : MonoBehaviour
     public void RecibirDano(int dano)
     {
         vidaActual -= dano;
+        if (vignette != null) vignette.MostrarEfecto();
         if (vidaActual < 0) vidaActual = 0;
 
         if (GameManager.Instancia != null)
@@ -129,6 +133,8 @@ public class PlayerStats : MonoBehaviour
         velocidadProyectil += cantidad;
         Debug.Log($"Velocidad de ataque aumentada a: {velocidadProyectil}");
     }
+
+    
 
 
 }
