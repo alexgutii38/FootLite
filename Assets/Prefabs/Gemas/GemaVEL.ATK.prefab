@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5493060300433863970}
   - component: {fileID: 436487018935677913}
   - component: {fileID: 5810589027972400728}
+  - component: {fileID: 4716465955024414884}
   m_Layer: 0
   m_Name: GemaVEL.ATK
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 3938860230655451633}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1084.8878, y: 0, z: 8919.83}
+  m_LocalPosition: {x: 1084.895, y: 0, z: 8919.83}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -98,12 +99,12 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.25
+  m_Center: {x: 0.25, y: 0, z: 0.2}
 --- !u!114 &5810589027972400728
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,8 +117,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33968b7d762996141b511b4fd814fa3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GemaVelAtq
-  valorGema: 1
-  particulaRecogida: {fileID: 0}
+  cantidadVelAtq: 5
+  rangoAtraccion: 3.5
+  velocidadAtraccion: 10
+  fuerzaHorizontal: 1.2
+  fuerzaVertical: 1.3
+  distanciaRecogida: 1.1
+--- !u!54 &4716465955024414884
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3938860230655451633}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 1.5
+  m_AngularDamping: 2
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 80
+  m_CollisionDetection: 0
 --- !u!1001 &5155638048119492248
 PrefabInstance:
   m_ObjectHideFlags: 0

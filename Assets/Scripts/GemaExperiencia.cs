@@ -1,79 +1,88 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(SphereCollider))]
 public class GemaExperiencia : MonoBehaviour
 {
-    [HideInInspector] 
+    [HideInInspector]
     public int cantidadExperiencia = 20;
 
     [Header("Imán de Gemas")]
-    public float rangoAtraccion = 3.5f; // Distancia a la que empieza a volar hacia el jugador
-    public float velocidadAtraccion = 10f; // Velocidad inicial de vuelo
+    public float rangoAtraccion = 3.5f;
+    public float velocidadAtraccion = 10f;
+
+    [Header("Movimiento al aparecer")]
+    public float fuerzaHorizontal = 1.2f;
+    public float fuerzaVertical = 1.3f;
+    public float distanciaRecogida = 1.1f;
 
     private Transform jugador;
     private bool siendoAtraida = false;
-    private Vector3 escalaFinal; // Para el efecto Pop
+    private Vector3 escalaFinal;
+    private Rigidbody rb;
+    private SphereCollider col;
 
     private void Start()
     {
-        // Buscamos al jugador una vez cuando la gema aparece en el mapa
         GameObject objJugador = GameObject.FindGameObjectWithTag("Player");
         if (objJugador != null)
-        {
             jugador = objJugador.transform;
-        }
 
-        // Guardamos su tamaño real y la hacemos invisible al nacer para el efecto "Pop"
         escalaFinal = transform.localScale;
         transform.localScale = Vector3.zero;
+
+        rb = GetComponent<Rigidbody>();
+        col = GetComponent<SphereCollider>();
+
+        rb.useGravity = true;
+        rb.isKinematic = false;
+        rb.linearDamping = 1.5f;
+        rb.angularDamping = 2f;
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
+        col.isTrigger = false;
+
+        Vector3 dir = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f)).normalized;
+        if (dir == Vector3.zero) dir = Vector3.forward;
+
+        Vector3 fuerza = dir * fuerzaHorizontal + Vector3.up * fuerzaVertical;
+        rb.AddForce(fuerza, ForceMode.Impulse);
     }
 
     private void Update()
     {
-        // 1. Animación "Pop" (crece suavemente hasta su tamaño normal)
         if (transform.localScale.x < escalaFinal.x)
-        {
             transform.localScale = Vector3.Lerp(transform.localScale, escalaFinal, Time.deltaTime * 15f);
-        }
 
-        // 2. Rotación continua para que llame la atención
         transform.Rotate(Vector3.up * 150f * Time.deltaTime, Space.World);
 
-        // Si no hay jugador, no calculamos el imán
         if (jugador == null) return;
 
-        // 3. Comprobamos la distancia entre la gema y el jugador
         float distancia = Vector3.Distance(transform.position, jugador.position);
 
-        // Si entra en el rango, activamos el imán para siempre
-        if (distancia <= rangoAtraccion)
+        if (!siendoAtraida && distancia <= rangoAtraccion)
         {
             siendoAtraida = true;
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
         }
 
-        // 4. Si el imán está activado, volamos hacia el jugador
         if (siendoAtraida)
         {
-            // Aceleramos la gema con el tiempo para que siempre te alcance aunque corras
-            velocidadAtraccion += Time.deltaTime * 15f; 
-            
-            // Movemos la gema hacia el centro del jugador (apuntando al pecho)
+            velocidadAtraccion += Time.deltaTime * 15f;
             Vector3 objetivo = jugador.position + Vector3.up * 1f;
             transform.position = Vector3.MoveTowards(transform.position, objetivo, velocidadAtraccion * Time.deltaTime);
-        }
-    }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        // Cuando por fin toca al jugador, da la experiencia y se destruye
-        if (other.CompareTag("Player"))
-        {
-            PlayerStats ps = other.GetComponent<PlayerStats>();
-            if (ps != null)
+            if (Vector3.Distance(transform.position, jugador.position) <= distanciaRecogida)
             {
-                ps.GanarExperiencia(cantidadExperiencia);
+                PlayerStats ps = jugador.GetComponent<PlayerStats>();
+                if (ps != null)
+                    ps.GanarExperiencia(cantidadExperiencia);
+
+                Destroy(gameObject);
             }
-            
-            Destroy(gameObject);
         }
     }
 }
