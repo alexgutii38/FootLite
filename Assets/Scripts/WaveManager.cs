@@ -22,6 +22,11 @@ public class WaveManager : MonoBehaviour
     public Transform jugador;
     public float radioSpawn = 12f;
 
+    [Header("Jefe Final")]
+    public GameObject prefabBoss;
+    public float tiempoAparicionBoss = 60f; // Aparece a los 60 segundos
+    private bool bossAparecido = false;
+
     [Header("Seguridad")]
     public int limiteMaximoEnemigos = 100;
 
@@ -34,7 +39,6 @@ public class WaveManager : MonoBehaviour
     private int cicloCompleto = 0;
     private float multiplicadorDificultad = 1.0f;
     
-    // <-- NUEVO: Dificultad basada en el mundo y nivel seleccionado
     private float dificultadBaseDelNivel = 1.0f; 
 
     void Start()
@@ -59,8 +63,6 @@ public class WaveManager : MonoBehaviour
 
         NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
 
-        // <-- NUEVO: Calcular la dificultad base. 
-        // Ejemplo: Mundo 2 es 50% más difícil que Mundo 1. Nivel 2 es 20% más difícil que Nivel 1.
         dificultadBaseDelNivel = 1f + ((mundo - 1) * 0.5f) + ((nivel - 1) * 0.2f);
         multiplicadorDificultad = dificultadBaseDelNivel; 
 
@@ -78,6 +80,14 @@ public class WaveManager : MonoBehaviour
 
     void Update()
     {
+        // --- CONTROL DEL JEFE ---
+        if (!bossAparecido && prefabBoss != null && Time.timeSinceLevelLoad >= tiempoAparicionBoss)
+        {
+            SpawnearBoss();
+            bossAparecido = true;
+        }
+        // ------------------------
+
         if (oleadaActual == null) return;
 
         tiempoTranscurridoOleada += Time.deltaTime;
@@ -101,7 +111,6 @@ public class WaveManager : MonoBehaviour
         if (indice == 0 && indiceOleadaActual != 0)
         {
             cicloCompleto++;
-            // <-- NUEVO: Multiplicamos la dificultad base del nivel por el aumento cíclico del modo infinito
             multiplicadorDificultad = dificultadBaseDelNivel * Mathf.Pow(1.15f, cicloCompleto);
             Debug.Log($"=== CICLO {cicloCompleto + 1} (INFINITO) === Multiplicador Total: {multiplicadorDificultad:F2}x");
         }
@@ -120,6 +129,27 @@ public class WaveManager : MonoBehaviour
     {
         IniciarOleada(indiceOleadaActual + 1);
     }
+
+    // --- NUEVO: MÉTODO PARA GENERAR AL JEFE ---
+private void SpawnearBoss()
+{
+    Vector3 posicionSpawn = transform.position; 
+    
+    if (rendererSuelo != null)
+    {
+        Bounds limites = rendererSuelo.bounds;
+        float x = Random.Range(limites.min.x + margenBorde, limites.max.x - margenBorde);
+        float z = Random.Range(limites.min.z + margenBorde, limites.max.z - margenBorde);
+        
+        // --- AQUÍ ESTÁ EL TRUCO ---
+        // Subimos la Y un poco (ajusta el 2.5f según veas que queda mejor)
+        float alturaSuelo = transform.position.y + 0.4f; 
+        posicionSpawn = new Vector3(x, alturaSuelo, z);
+    }
+
+    Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
+}
+    // ------------------------------------------
 
     void SpawnEnemigos()
     {
@@ -179,7 +209,7 @@ public class WaveManager : MonoBehaviour
                 colorOverLifetime.color = grad;
             }
 
- // 1. Intentamos escalar si es un Caminante
+            // 1. Intentamos escalar si es un Caminante
             EnemigoCaminante scriptCam = enemigo.GetComponent<EnemigoCaminante>();
             if (scriptCam != null)
             {
@@ -211,10 +241,9 @@ public class WaveManager : MonoBehaviour
                 scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento, 5.5f);
                 scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
                 
-                // Extra: Hacemos que sus tarjetas rojas y amarillas también duelan más
                 scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
                 scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
             }
-        } // <-- Aquí acaba el bucle for
-    } // <-- Aquí acaba el método SpawnEnemigos
-} // <-- Aquí acaba la clase WaveManager
+        } 
+    } 
+}
