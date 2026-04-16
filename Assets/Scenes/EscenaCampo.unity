@@ -3758,7 +3758,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1144972832}
   m_CullTransparentMesh: 1
+<<<<<<< HEAD
+--- !u!1 &1239595575
+=======
 --- !u!1 &1237264662
+>>>>>>> Sprint4HUD_Texturas_Fisicas
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3766,23 +3770,54 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< HEAD
+  - component: {fileID: 1239595576}
+  - component: {fileID: 1239595579}
+  - component: {fileID: 1239595578}
+  - component: {fileID: 1239595577}
+  m_Layer: 5
+  m_Name: Panel
+=======
   - component: {fileID: 1237264663}
   - component: {fileID: 1237264666}
   - component: {fileID: 1237264665}
   - component: {fileID: 1237264664}
   m_Layer: 7
   m_Name: GroundCollider
+>>>>>>> Sprint4HUD_Texturas_Fisicas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< HEAD
+--- !u!224 &1239595576
+RectTransform:
+=======
 --- !u!4 &1237264663
 Transform:
+>>>>>>> Sprint4HUD_Texturas_Fisicas
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
+  m_GameObject: {fileID: 1239595575}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1862592248}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1239595577
+MonoBehaviour:
+=======
   m_GameObject: {fileID: 1237264662}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
@@ -3794,10 +3829,54 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &1237264664
 MeshCollider:
+>>>>>>> Sprint4HUD_Texturas_Fisicas
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
+  m_GameObject: {fileID: 1239595575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93dfb6c9b83a27e4f9ea00a8b6c6ffed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VignetteDano
+  intensidadMaxima: 0.85
+  velocidadAparicion: 8
+  velocidadDesaparicion: 2
+--- !u!114 &1239595578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1239595575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0, a: 0}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1239595579
+CanvasRenderer:
+=======
   m_GameObject: {fileID: 1237264662}
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -3816,10 +3895,15 @@ MeshCollider:
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &1237264665
 MeshRenderer:
+>>>>>>> Sprint4HUD_Texturas_Fisicas
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
+  m_GameObject: {fileID: 1239595575}
+  m_CullTransparentMesh: 1
+=======
   m_GameObject: {fileID: 1237264662}
   m_Enabled: 0
   m_CastShadows: 1
@@ -3870,6 +3954,7 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237264662}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+>>>>>>> Sprint4HUD_Texturas_Fisicas
 --- !u!1 &1332130485
 GameObject:
   m_ObjectHideFlags: 0
@@ -5204,6 +5289,7 @@ RectTransform:
   - {fileID: 1577365697}
   - {fileID: 445003355}
   - {fileID: 2061785789}
+  - {fileID: 1239595576}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -5414,6 +5500,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f83efa51fcf87b746b2e6fde26d8859b, type: 2}
   jugador: {fileID: 392490081}
   radioSpawn: 12
+  prefabBoss: {fileID: 1061924988093087196, guid: 8b4b1b3302bb14544807cdc9f8fbd27d, type: 3}
+  tiempoAparicionBoss: 1
   limiteMaximoEnemigos: 100
 --- !u!4 &2040976432
 Transform:
