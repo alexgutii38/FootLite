@@ -78,17 +78,27 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    void Update()
+void Update()
     {
         // --- CONTROL DEL JEFE ---
-        if (!bossAparecido && prefabBoss != null && Time.timeSinceLevelLoad >= tiempoAparicionBoss)
+        if (!bossAparecido && prefabBoss != null)
         {
-            SpawnearBoss();
-            bossAparecido = true;
+            float tiempoRestante = tiempoAparicionBoss - Time.timeSinceLevelLoad;
+
+            // Actualizamos el texto en pantalla
+            if (BossUIManager.Instancia != null)
+                BossUIManager.Instancia.ActualizarTemporizador(tiempoRestante);
+
+            if (tiempoRestante <= 0)
+            {
+                SpawnearBoss();
+                bossAparecido = true;
+            }
         }
         // ------------------------
 
         if (oleadaActual == null) return;
+        // ... (El resto de tu Update sigue igual)
 
         tiempoTranscurridoOleada += Time.deltaTime;
 

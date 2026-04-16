@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-using CartoonFX; 
+using CartoonFX; // Para los textos de daño
 
 public class EnemigoBoss : MonoBehaviour, IDamageable
 {
@@ -12,7 +12,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
     [Header("Habilidades del Jefe")]
     public float tiempoEntreSprints = 8f; // Cada cuántos segundos sprinta
-    public float multiplicadorSprint = 2.5f; // Cuánto se multiplica su velocidad al sprintar
+    public float multiplicadorSprint = 4f; // Cuánto se multiplica su velocidad al sprintar
     private float velocidadActual;
     private float tiempoParaSprint = 0f;
     private float tiempoFinSprint = 0f;
@@ -25,7 +25,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
     private float tiempoParaCartas = 0f;
 
     [Header("Animación")]
-    public Animator animator; 
+    public Animator animator;
 
     [Header("Drops Épicos")]
     public GameObject prefabCofre;
@@ -39,13 +39,21 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
     private void Start()
     {
+        // 1. Buscamos al jugador
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) jugador = p.transform;
 
-        // Inicializamos los tiempos y la velocidad
+        // 2. Inicializamos los tiempos y la velocidad
         velocidadActual = velocidadMovimiento;
         tiempoParaSprint = Time.time + tiempoEntreSprints;
         tiempoParaCartas = Time.time + tiempoEntreAtaquesCartas;
+
+        // 3. --- CONEXIÓN CON LA INTERFAZ ---
+        // Le decimos a la barra que aparezca y se llene con nuestra vida máxima
+        if (BossUIManager.Instancia != null)
+        {
+            BossUIManager.Instancia.MostrarBarraVida(vida);
+        }
     }
 
     private void Update()
@@ -91,7 +99,8 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
         // Animación: Si sprinta, hacemos que la animación de correr vaya el doble de rápido
         if (animator != null)
         {
-            animator.SetFloat("speed", sprintando ? 2f : 1f); 
+            // Si sprinta mueve las piernas al doble de velocidad
+            animator.SetFloat("speed", sprintando ? 2f : 1f);
         }
     }
 
@@ -107,13 +116,11 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
         {
             float anguloActual = (anguloPaso * i);
             Quaternion rotacionCarta = Quaternion.Euler(0f, anguloActual, 0f);
-            
+
             // Dirección en la que saldrá volando esta tarjeta
             Vector3 direccionVuelo = rotacionCarta * Vector3.forward;
-            
-            // Busca esta línea dentro de DispararTarjetas()
             Vector3 posicionSpawn = transform.position + (Vector3.up * 0.5f) + (direccionVuelo * radioAparicion);
-            
+
             // Creamos la tarjeta
             GameObject obj = Instantiate(prefabTarjeta, posicionSpawn, rotacionCarta);
 
@@ -127,15 +134,14 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
                 }
             }
 
-            // 2. MAGIA: Le damos el empujón y el color (El secreto del Árbitro)
+            // 2. Le damos el empujón y el color rojo
             TarjetaProjectile tarjeta = obj.GetComponent<TarjetaProjectile>();
             if (tarjeta != null)
             {
                 // Le decimos que vuele en su dirección
                 tarjeta.Inicializar(direccionVuelo);
-                
-                // Le ponemos el daño del jefe y color ROJO (o Color.yellow)
-                tarjeta.Configurar(danoPorContacto, Color.red); 
+                // Le ponemos el daño del jefe y color ROJO
+                tarjeta.Configurar(danoPorContacto, Color.red);
             }
         }
     }
@@ -155,6 +161,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
     public void RecibirDano(float cantidad)
     {
+        // 1. Mostrar numerito de daño
         if (prefabTextoDaño != null)
         {
             ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 4f, Quaternion.identity);
@@ -162,6 +169,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
             if (scriptTexto != null) scriptTexto.MostrarValorDaño(cantidad);
         }
 
+        // 2. Empujar un poquitito al jefe
         if (jugador != null)
         {
             Vector3 direccionEmpuje = (transform.position - jugador.position).normalized;
@@ -169,10 +177,25 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
             transform.position += direccionEmpuje * 0.05f;
         }
 
+        // 3. Restar vida real
         vida -= cantidad;
 
+        // 4. --- CONEXIÓN CON LA INTERFAZ ---
+        // Le avisamos al Slider de que nuestra vida ha bajado
+        if (BossUIManager.Instancia != null)
+        {
+            BossUIManager.Instancia.ActualizarBarraVida(vida);
+        }
+
+        // 5. Comprobar si muere
         if (vida <= 0f)
         {
+            // Ocultamos la barra porque el jefe ya no existe
+            if (BossUIManager.Instancia != null)
+            {
+                BossUIManager.Instancia.OcultarBarraVida();
+            }
+
             if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
 
             if (prefabCofre != null)
