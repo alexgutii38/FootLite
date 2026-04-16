@@ -58,6 +58,10 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
+# Blender files (binarios grandes, no van en git)
+*.blend
+*.blend1
+
 # Crashlytics generated file
 crashlytics-build.properties
 
