@@ -26,7 +26,11 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 100}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 0
+<<<<<<< HEAD
   controlID: 12470
+=======
+  controlID: 7774
+>>>>>>> origin/Sprint4HUD-Yeray
   draggingID: 0
 --- !u!114 &2
 MonoBehaviour:
@@ -153,7 +157,11 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
+<<<<<<< HEAD
   controlID: 12362
+=======
+  controlID: 7665
+>>>>>>> origin/Sprint4HUD-Yeray
   draggingID: 0
 --- !u!114 &4
 MonoBehaviour:
@@ -759,7 +767,11 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
+<<<<<<< HEAD
       m_ExpandedIDs: 7e2dffff9e2dffff2236ffff7648ffffda4bffff2cddffff68e5ffff1afbffffc6920000aabe0000
+=======
+      m_ExpandedIDs: 7648ffffda4bffff2cddffff68e5ffff1afbffffc6920000
+>>>>>>> origin/Sprint4HUD-Yeray
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -856,7 +868,12 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SkipHidden: 0
     m_SearchArea: 1
+<<<<<<< HEAD
     m_Folders: []
+=======
+    m_Folders:
+    - Assets/Scripts
+>>>>>>> origin/Sprint4HUD-Yeray
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
