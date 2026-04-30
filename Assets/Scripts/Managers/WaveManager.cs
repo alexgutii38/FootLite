@@ -78,15 +78,13 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-void Update()
+    void Update()
     {
-        // --- CONTROL DEL JEFE ---
         if (!bossAparecido && prefabBoss != null)
         {
             float tiempoRestante = tiempoAparicionBoss - Time.timeSinceLevelLoad;
-            
-            // Actualizamos el texto en pantalla
-            if (BossUIManager.Instancia != null) 
+
+            if (BossUIManager.Instancia != null)
                 BossUIManager.Instancia.ActualizarTemporizador(tiempoRestante);
 
             if (tiempoRestante <= 0)
@@ -95,10 +93,8 @@ void Update()
                 bossAparecido = true;
             }
         }
-        // ------------------------
 
         if (oleadaActual == null) return;
-        // ... (El resto de tu Update sigue igual)
 
         tiempoTranscurridoOleada += Time.deltaTime;
 
@@ -140,26 +136,21 @@ void Update()
         IniciarOleada(indiceOleadaActual + 1);
     }
 
-    // --- NUEVO: MÉTODO PARA GENERAR AL JEFE ---
-private void SpawnearBoss()
-{
-    Vector3 posicionSpawn = transform.position; 
-    
-    if (rendererSuelo != null)
+    private void SpawnearBoss()
     {
-        Bounds limites = rendererSuelo.bounds;
-        float x = Random.Range(limites.min.x + margenBorde, limites.max.x - margenBorde);
-        float z = Random.Range(limites.min.z + margenBorde, limites.max.z - margenBorde);
-        
-        // --- AQUÍ ESTÁ EL TRUCO ---
-        // Subimos la Y un poco (ajusta el 2.5f según veas que queda mejor)
-        float alturaSuelo = transform.position.y + 0.4f; 
-        posicionSpawn = new Vector3(x, alturaSuelo, z);
-    }
+        Vector3 posicionSpawn = transform.position;
 
-    Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
-}
-    // ------------------------------------------
+        if (rendererSuelo != null)
+        {
+            Bounds limites = rendererSuelo.bounds;
+            float x = Random.Range(limites.min.x + margenBorde, limites.max.x - margenBorde);
+            float z = Random.Range(limites.min.z + margenBorde, limites.max.z - margenBorde);
+            float alturaSuelo = transform.position.y + 0.4f;
+            posicionSpawn = new Vector3(x, alturaSuelo, z);
+        }
+
+        Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
+    }
 
     void SpawnEnemigos()
     {

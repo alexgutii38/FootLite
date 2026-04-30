@@ -18,9 +18,9 @@ public class GameManager : MonoBehaviour
     public bool juegoEnPausa = false;
     
     [Header("Condición de Victoria (Modo Supervivencia)")]
-    public float tiempoParaGanar = 480f; // 480 segundos = 8 minutos
+    public float tiempoParaGanar = 480f;
     public bool nivelCompletado = false;
-    public GameObject panelVictoria; // <-- NUEVO PANEL
+    public GameObject panelVictoria;
 
     [Header("Referencias de UI")]
     public TextMeshProUGUI textoVida;
@@ -69,14 +69,12 @@ public class GameManager : MonoBehaviour
     {
         if (!juegoEnPausa)
         {
+            if (sliderExperiencia != null && playerStats != null)
+            {
+                sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
+                sliderExperiencia.value = Mathf.Lerp(sliderExperiencia.value, playerStats.experienciaActual, Time.unscaledDeltaTime * 10f);
+            }
 
-            // --- ANIMACIÓN SUAVE DE LA BARRA DE EXPERIENCIA ---
-        if (sliderExperiencia != null && playerStats != null)
-        {
-            sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
-            // Lerp hace que persiga el valor real suavemente. Usamos unscaledDeltaTime por si el juego se pausa al subir de nivel.
-            sliderExperiencia.value = Mathf.Lerp(sliderExperiencia.value, playerStats.experienciaActual, Time.unscaledDeltaTime * 10f);
-        }
             tiempoPartida += Time.deltaTime;
 
             if (textoTiempo != null)
@@ -86,7 +84,6 @@ public class GameManager : MonoBehaviour
                 textoTiempo.text = string.Format("{0:00}:{1:00}", minutos, segundos);
             }
 
-            // <-- NUEVO: Comprobar si hemos llegado a los 8 minutos
             if (!nivelCompletado && tiempoPartida >= tiempoParaGanar)
             {
                 CompletarNivel();
@@ -106,15 +103,12 @@ public class GameManager : MonoBehaviour
         ActualizarUI();
     }
 
-    // --- NUEVOS MÉTODOS DE VICTORIA ---
     public void CompletarNivel()
     {
         nivelCompletado = true;
         if (panelVictoria != null)
-        {
             panelVictoria.SetActive(true);
-        }
-        PausarJuego(true); // Pausamos para que el jugador elija qué hacer
+        PausarJuego(true);
     }
 
     public void ContinuarModoInfinito()
@@ -126,9 +120,8 @@ public class GameManager : MonoBehaviour
     public void SalirAlMenu()
     {
         PausarJuego(false);
-        SceneManager.LoadScene("EscenaTitulo"); 
+        SceneManager.LoadScene("EscenaTitulo");
     }
-    // ----------------------------------
 
     public void AgregarEnemigoActivo() { enemigosActivos++; }
 
@@ -159,17 +152,14 @@ public class GameManager : MonoBehaviour
     {
         if(playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
 
-        if (textoVida != null) textoVida.text = "Vida: " + (playerStats != null ? playerStats.vidaActual: 0);
+        if (textoVida != null) textoVida.text = "Vida: " + (playerStats != null ? playerStats.vidaActual : 0);
         if (textoEnemigos != null) textoEnemigos.text = "Muertes: " + enemigosEliminados;
 
         if (playerStats != null)
         {
             if (textoNivelJugador != null) textoNivelJugador.text = "Nivel: " + playerStats.nivel;
             if (sliderExperiencia != null)
-            {
                 sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
-                //sliderExperiencia.value = playerStats.experienciaActual;
-            }
         }
     }
 

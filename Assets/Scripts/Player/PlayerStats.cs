@@ -99,39 +99,34 @@ public class PlayerStats : MonoBehaviour
     public void ModificarDano(float cantidad)
     {
         danoProyectil += cantidad;
-        Debug.Log($"Daño aumentado a: {danoProyectil}");
     }
 
     public void ModificarVida(float cantidad)
     {
         vidaMaxima += (int)cantidad;
         vidaActual += (int)cantidad;
-        Debug.Log($"Vida máxima aumentada a: {vidaMaxima}");
     }
 
     public void ModificarCadencia(float cantidad)
     {
         cadenciaDisparo = Mathf.Max(0.1f, cadenciaDisparo - cantidad);
-        Debug.Log($"Cadencia mejorada a: {cadenciaDisparo}s");
     }
 
     public void Curar(float cantidad)
     {
         vidaActual = Mathf.Min(vidaMaxima, vidaActual + (int)cantidad);
-        Debug.Log($"Curado +{(int)cantidad} HP");
     }
+
     public void ModificarEscudo(float cantidad)
     {
-    int escudoExtra = (int)cantidad;
-    vidaMaxima += escudoExtra;
-    vidaActual += escudoExtra;
-    vidaActual = Mathf.Min(vidaActual, vidaMaxima); // No exceder máxima
-    Debug.Log($"Escudo +{escudoExtra} | Vida máx: {vidaMaxima}");
+        int escudoExtra = (int)cantidad;
+        vidaMaxima += escudoExtra;
+        vidaActual = Mathf.Min(vidaActual + escudoExtra, vidaMaxima);
     }
+
     public void ModificarVelAtq(float cantidad)
     {
         velocidadProyectil += cantidad;
-        Debug.Log($"Velocidad de ataque aumentada a: {velocidadProyectil}");
     }
 
     

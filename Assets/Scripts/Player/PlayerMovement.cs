@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // <-- ¡NUEVO! Necesario para manejar Sliders
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -15,20 +15,27 @@ public class PlayerMovement : MonoBehaviour
     [Header("Sistema de Sprint (Estamina)")]
     public float maxStamina = 100f;
     public float currentStamina;
-    public float sprintMultiplier = 1.8f; 
-    public float staminaDrainRate = 25f;  
-    public float staminaRegenRate = 15f;  
-    private bool isExhausted = false; 
+    public float sprintMultiplier = 1.8f;
+    public float staminaDrainRate = 25f;
+    public float staminaRegenRate = 15f;
+    private bool isExhausted = false;
 
     [Header("Interfaz (UI)")]
-    public Slider sliderEstamina; // <-- ¡NUEVO! Aquí conectaremos la barrita
+    public Slider sliderEstamina;
+
+    private PlayerStats statsCache;
 
     void Start()
     {
+        statsCache = GetComponent<PlayerStats>();
+        if (statsCache == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) statsCache = player.GetComponent<PlayerStats>();
+        }
         ActualizarStats();
-        currentStamina = maxStamina; 
+        currentStamina = maxStamina;
 
-        // ¡NUEVO! Configuramos la barra al máximo cuando empezamos
         if (sliderEstamina != null)
         {
             sliderEstamina.maxValue = maxStamina;
@@ -45,18 +52,18 @@ public class PlayerMovement : MonoBehaviour
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
         bool isMoving = direction.magnitude >= 0.1f;
-        bool isTryingToSprint = Input.GetKey(KeyCode.Space); 
+        bool isTryingToSprint = Input.GetKey(KeyCode.Space);
 
         bool isSprinting = isTryingToSprint && isMoving && !isExhausted;
 
         if (isSprinting)
         {
             currentStamina -= staminaDrainRate * Time.deltaTime;
-            
+
             if (currentStamina <= 0f)
             {
                 currentStamina = 0f;
-                isExhausted = true; 
+                isExhausted = true;
             }
         }
         else
@@ -64,7 +71,7 @@ public class PlayerMovement : MonoBehaviour
             if (currentStamina < maxStamina)
             {
                 currentStamina += staminaRegenRate * Time.deltaTime;
-                
+
                 if (currentStamina >= maxStamina)
                 {
                     currentStamina = maxStamina;
@@ -73,11 +80,8 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        // ¡NUEVO! Le decimos a la barra visual cuánta estamina nos queda
         if (sliderEstamina != null)
-        {
             sliderEstamina.value = currentStamina;
-        }
 
         float currentSpeedLimit = isSprinting ? (speed * sprintMultiplier) : speed;
 
@@ -87,7 +91,7 @@ public class PlayerMovement : MonoBehaviour
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            
+
             controller.Move(moveDir.normalized * currentSpeedLimit * Time.deltaTime);
         }
         else
@@ -103,10 +107,7 @@ public class PlayerMovement : MonoBehaviour
 
     void ActualizarStats()
     {
-        PlayerStats stats = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerStats>();
-        if (stats != null)
-        {
-            speed = stats.speed;
-        }
+        if (statsCache != null)
+            speed = statsCache.speed;
     }
 }
