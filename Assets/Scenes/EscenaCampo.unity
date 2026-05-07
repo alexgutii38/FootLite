@@ -540,9 +540,9 @@ MonoBehaviour:
   estadioMundo1: {fileID: 1904787142}
   estadioMundo2: {fileID: 300674376}
   estadioMundo3: {fileID: 1285886610}
-  skyboxMundo1: {fileID: 0}
-  skyboxMundo2: {fileID: 0}
-  skyboxMundo3: {fileID: 0}
+  skyboxMundo1: {fileID: 2100000, guid: 85cf0b004bc4a654b9e501efcce47902, type: 2}
+  skyboxMundo2: {fileID: 2100000, guid: e391f00234292cc4f935308c11cf0e54, type: 2}
+  skyboxMundo3: {fileID: 2100000, guid: 5d133deeaa66ed445853e946ff25e073, type: 2}
 --- !u!4 &171608739
 Transform:
   m_ObjectHideFlags: 0
