@@ -168,7 +168,19 @@ public class WaveManager : MonoBehaviour
             Bounds limites = rendererSuelo.bounds;
             float x = Random.Range(limites.min.x + margenBorde, limites.max.x - margenBorde);
             float z = Random.Range(limites.min.z + margenBorde, limites.max.z - margenBorde);
-            posicionSpawn = new Vector3(x, transform.position.y + 0.4f, z);
+
+            // Raycast desde encima del jugador para encontrar el suelo exacto
+            Vector3 rayStart = new Vector3(x, jugador.position.y + rayAltura, z);
+            RaycastHit hit;
+            float groundY = jugador.position.y;
+            if (Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f))
+                groundY = hit.point.y + offsetSuelo;
+
+            posicionSpawn = new Vector3(x, groundY, z);
+        }
+        else
+        {
+            posicionSpawn = new Vector3(posicionSpawn.x, jugador.position.y, posicionSpawn.z);
         }
 
         GameObject bossObj = Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
@@ -212,8 +224,9 @@ public class WaveManager : MonoBehaviour
                 spawnPos.z = Mathf.Clamp(spawnPos.z, boundsSuelo.min.z + margenBorde, boundsSuelo.max.z - margenBorde);
             }
 
-            float startY = tieneBounds ? (boundsSuelo.max.y + rayAltura) : (jugador.position.y + rayAltura);
-            Vector3 rayStart = new Vector3(spawnPos.x, startY, spawnPos.z);
+            // Siempre desde encima del jugador, no desde los bounds del estadio
+            // (los bounds del estadio incluyen stands altos que desvían el rayo)
+            Vector3 rayStart = new Vector3(spawnPos.x, jugador.position.y + rayAltura, spawnPos.z);
 
             RaycastHit hit;
             bool hitOk = groundLayer.value == 0

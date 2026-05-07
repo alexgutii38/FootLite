@@ -1,49 +1,50 @@
 using CartoonFX;
 using UnityEngine;
 
-
 public class EnemigoCaminante : MonoBehaviour, IDamageable
 {
-
     [Header("Drops (Botín)")]
     public GameObject prefabGemaExperiencia;
     public GameObject prefabCofre;
-    [Range(0f, 1f)] public float probabilidadGema = 0.8f;   // 80% de soltar gema
-    [Range(0f, 1f)] public float probabilidadCofre = 0.05f; // 5% de soltar cofre
-    // ==== NUEVO ====
+    [Range(0f, 1f)] public float probabilidadGema  = 0.8f;
+    [Range(0f, 1f)] public float probabilidadCofre = 0.05f;
+
     [Header("Atributos escalables")]
     public float vida = 50f;
     public float velocidadMovimiento = 3f;
-    public int experienciaAlMorir = 20;
+    public int   experienciaAlMorir  = 20;
+    public int   experienciaPorGolpe = 5;
 
-    public int experienciaPorGolpe = 5;
-    // ===============
-
-    public int danoPorContacto = 10;
+    public int   danoPorContacto  = 10;
     public float tiempoEntreDanos = 0.5f;
-    public float rangoDeteccion = 50f;
+    public float rangoDeteccion   = 50f;
 
     [Header("Futbol FX")]
-
     public ParticleSystem efectoMuerte;
     public ParticleSystem prefabTextoDaño;
 
-    //public AudioClip sonidoGolpe; Para el audio
-
-    private float alturaInicial;
     private Transform jugador;
-    private float tiempoUltimoDano;
+    private float     tiempoUltimoDano;
     private Rigidbody rb;
-    public Animator animator;
+    public  Animator  animator;
 
-
+    // Perf: layer cacheado, timer para separación
+    private LayerMask enemiesLayer;
+    private float     separacionTimer;
 
     void Start()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) jugador = p.transform;
+
         rb = GetComponent<Rigidbody>();
-        alturaInicial = transform.position.y;
+        enemiesLayer = LayerMask.GetMask("Enemies");
+
+        if (rb != null)
+            rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+
+        if (animator != null)
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
     }
 
     void Update()
@@ -51,117 +52,95 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
         if (jugador == null) return;
 
         float distancia = Vector3.Distance(transform.position, jugador.position);
+        bool  enRango   = distancia <= rangoDeteccion;
 
-        if (distancia <= rangoDeteccion)
+        if (enRango)
         {
             Vector3 direccion = (jugador.position - transform.position).normalized;
 
-            // Rotar para mirar al jugador
             if (direccion != Vector3.zero)
-            {
-                Quaternion rotacionObjetivo = Quaternion.LookRotation(direccion);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, Time.deltaTime * 5f);
-            }
+                transform.rotation = Quaternion.Slerp(transform.rotation,
+                    Quaternion.LookRotation(direccion), Time.deltaTime * 5f);
 
-            // Mover
             if (rb != null)
-                rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento, rb.linearVelocity.y, direccion.z * velocidadMovimiento);
-                
+                rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento,
+                    rb.linearVelocity.y, direccion.z * velocidadMovimiento);
             else
                 transform.position += direccion * velocidadMovimiento * Time.deltaTime;
         }
         else
         {
             if (rb != null)
-                rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
         }
 
-        bool moviendose = distancia <= rangoDeteccion;
         if (animator != null)
-            animator.SetFloat("speed", moviendose ? velocidadMovimiento : 0f, 0.1f, Time.deltaTime);
+            animator.SetFloat("speed", enRango ? velocidadMovimiento : 0f, 0.1f, Time.deltaTime);
 
-        // Separación y altura mantienen igual...
-        Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));
-        foreach (Collider col in vecinos)
+        // Separación: solo cada 0.1 s (10 veces/seg en vez de 60)
+        separacionTimer -= Time.deltaTime;
+        if (separacionTimer <= 0f)
         {
-            if (col.gameObject != this.gameObject)
+            separacionTimer = 0.1f;
+
+            Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, enemiesLayer);
+            foreach (Collider col in vecinos)
             {
-                Vector3 separacion = (transform.position - col.transform.position).normalized;
-                transform.position += separacion * 0.15f;
+                if (col.gameObject == gameObject) continue;
+                Vector3 sep = (transform.position - col.transform.position).normalized;
+                transform.position += sep * 0.15f;
+            }
+
+            if (distancia < 1f)
+            {
+                Vector3 dir = (transform.position - jugador.position).normalized;
+                transform.position += dir * 0.15f;
             }
         }
-
-        if (jugador != null)
-        {
-            float distaciaJugador = Vector3.Distance(transform.position, jugador.position);
-            float distanciaMinima = 1f;
-            if (distaciaJugador < distanciaMinima)
-            {
-                Vector3 direccionSeparacion = (transform.position - jugador.position).normalized;
-                transform.position += direccionSeparacion * 0.15f;
-            }
-        }
-
-        // Mantener altura constante
-        Vector3 posicionY = transform.position;
-        posicionY.y = alturaInicial;
-        transform.position = posicionY;
     }
 
     void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player")) return;
+        PlayerStats ps = other.GetComponent<PlayerStats>();
+        if (ps != null && Time.time > tiempoUltimoDano + tiempoEntreDanos)
         {
-            PlayerStats playerStats = other.GetComponent<PlayerStats>();
-            if (playerStats != null && Time.time > tiempoUltimoDano + tiempoEntreDanos)
-            {
-                playerStats.RecibirDano(danoPorContacto);
-                tiempoUltimoDano = Time.time;
-            }
+            ps.RecibirDano(danoPorContacto);
+            tiempoUltimoDano = Time.time;
         }
     }
 
-    // ==== NUEVO ====
-    // Recibir daño y muerte
-public void RecibirDano(float cantidad)
+    public void RecibirDano(float cantidad)
     {
-        // 1. Mostrar texto de daño
         if (prefabTextoDaño != null)
         {
-            ParticleSystem textObj = Instantiate(prefabTextoDaño, transform.position + Vector3.up * 2f, Quaternion.identity);
-            CFXR_ParticleText scriptTexto = textObj.GetComponent<CFXR_ParticleText>();
-            if (scriptTexto != null)
-                scriptTexto.MostrarValorDaño(cantidad);
+            ParticleSystem textObj = Instantiate(prefabTextoDaño,
+                transform.position + Vector3.up * 2f, Quaternion.identity);
+            CFXR_ParticleText script = textObj.GetComponent<CFXR_ParticleText>();
+            if (script != null) script.MostrarValorDaño(cantidad);
         }
 
-        // 2. Restar vida
         vida -= cantidad;
 
-        // Knockback
         if (jugador != null)
         {
-            Vector3 direccionEmpuje = (transform.position - jugador.position).normalized;
-            direccionEmpuje.y = 0f;
-            transform.position += direccionEmpuje * 0.25f;
+            Vector3 dir = (transform.position - jugador.position).normalized;
+            dir.y = 0f;
+            transform.position += dir * 0.25f;
         }
 
-        // 3. Morir y soltar objetos
         if (vida <= 0f)
         {
-            if (GameManager.Instancia != null)
-                GameManager.Instancia.SumarEliminado();
+            if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
 
-            // Soltar Cofre o Gema a la altura correcta (0.3f)
             if (prefabCofre != null && Random.value <= probabilidadCofre)
-            {
                 Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
-            }
             else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
             {
-                GameObject gema = Instantiate(prefabGemaExperiencia, transform.position + Vector3.up * 0.3f, Quaternion.identity);
-                GemaExperiencia scriptGema = gema.GetComponent<GemaExperiencia>();
-                if (scriptGema != null)
-                    scriptGema.cantidadExperiencia = experienciaAlMorir;
+                GameObject gema = Instantiate(prefabGemaExperiencia,
+                    transform.position + Vector3.up * 0.3f, Quaternion.identity);
+                GemaExperiencia sg = gema.GetComponent<GemaExperiencia>();
+                if (sg != null) sg.cantidadExperiencia = experienciaAlMorir;
             }
 
             if (efectoMuerte != null)

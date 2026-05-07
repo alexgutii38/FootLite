@@ -10,23 +10,31 @@ public class Bala : MonoBehaviour
 
     private float velocidad;
     private float dano;
-
     private float tiempoActual;
     private float tiempoSpawn;
-
-    private PlayerStats stats;
 
     private void Start()
     {
         tiempoSpawn = Time.time;
-        stats = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerStats>();
-        ActualizarStats();
+
+        // Stats leídos una sola vez al spawnearse (no cambian durante el vuelo)
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null)
+        {
+            PlayerStats stats = p.GetComponent<PlayerStats>();
+            if (stats != null)
+            {
+                velocidad = stats.velocidadProyectil;
+                dano      = stats.danoProyectil;
+                return;
+            }
+        }
+        velocidad = 10f;
+        dano      = 20f;
     }
 
     private void Update()
     {
-        ActualizarStats();
-
         transform.Translate(Vector3.forward * velocidad * Time.deltaTime);
 
         tiempoActual += Time.deltaTime;
@@ -36,9 +44,7 @@ public class Bala : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Ignora colisiones justo al spawnear (si nace dentro del suelo/collider)
         if (Time.time < tiempoSpawn + ignorarColisionesAlInicio) return;
-
         if (other.CompareTag("Player")) return;
 
         IDamageable damageable = other.GetComponentInParent<IDamageable>();
@@ -49,14 +55,6 @@ public class Bala : MonoBehaviour
             return;
         }
 
-        // Si no es enemigo, destruye la bala (en vez de dejarla tirada en el suelo)
         Destroy(gameObject);
-    }
-
-    private void ActualizarStats()
-    {
-        if (stats == null) return;
-        velocidad = stats.velocidadProyectil;
-        dano = stats.danoProyectil;
     }
 }

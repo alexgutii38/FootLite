@@ -31,7 +31,7 @@ public class CamaraTemblar : MonoBehaviour
             Debug.LogWarning("CamaraTemblar: no hay cámara con tag 'MainCamera'.");
     }
 
-    public void Temblar()                            => Temblar(duracion, magnitud);
+    public void Temblar() => Temblar(duracion, magnitud);
     public void Temblar(float dur, float mag)
     {
         shakeTimer    = dur;
@@ -43,17 +43,14 @@ public class CamaraTemblar : MonoBehaviour
     {
         if (camTransform == null) return;
 
-        // 1. Deshacer el offset del frame anterior
         camTransform.localPosition -= ultimoOffset;
 
         if (shakeTimer > 0f)
         {
-            // 2. Calcular nuevo offset (se reduce hacia 0 al final del shake)
             float t = shakeTimer / shakeDuracion;
             ultimoOffset   = Random.insideUnitSphere * shakeMagnitud * t;
             ultimoOffset.z = 0f;
 
-            // 3. Aplicar
             camTransform.localPosition += ultimoOffset;
             shakeTimer -= Time.unscaledDeltaTime;
         }

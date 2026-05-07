@@ -2,75 +2,62 @@ using UnityEngine;
 
 public class GemaExperiencia : MonoBehaviour
 {
-    [HideInInspector] 
+    [HideInInspector]
     public int cantidadExperiencia = 20;
 
     [Header("Imán de Gemas")]
-    public float rangoAtraccion = 3.5f; // Distancia a la que empieza a volar hacia el jugador
-    public float velocidadAtraccion = 10f; // Velocidad inicial de vuelo
+    public float rangoAtraccion    = 3.5f;
+    public float velocidadAtraccion = 10f;
 
     private Transform jugador;
-    private bool siendoAtraida = false;
-    private Vector3 escalaFinal; // Para el efecto Pop
+    private bool      siendoAtraida = false;
+    private Vector3   escalaFinal;
+
+    // Comparar con sqrMagnitude evita la raíz cuadrada (más rápido)
+    private float rangoAtraccionSqr;
 
     private void Start()
     {
-        // Buscamos al jugador una vez cuando la gema aparece en el mapa
-        GameObject objJugador = GameObject.FindGameObjectWithTag("Player");
-        if (objJugador != null)
-        {
-            jugador = objJugador.transform;
-        }
+        GameObject obj = GameObject.FindGameObjectWithTag("Player");
+        if (obj != null) jugador = obj.transform;
 
-        // Guardamos su tamaño real y la hacemos invisible al nacer para el efecto "Pop"
-        escalaFinal = transform.localScale;
+        escalaFinal      = transform.localScale;
         transform.localScale = Vector3.zero;
+        rangoAtraccionSqr = rangoAtraccion * rangoAtraccion;
     }
 
     private void Update()
     {
-        // 1. Animación "Pop" (crece suavemente hasta su tamaño normal)
+        // Animación Pop
         if (transform.localScale.x < escalaFinal.x)
-        {
             transform.localScale = Vector3.Lerp(transform.localScale, escalaFinal, Time.deltaTime * 15f);
-        }
 
-        // 2. Rotación continua para que llame la atención
+        // Rotación decorativa
         transform.Rotate(Vector3.up * 150f * Time.deltaTime, Space.World);
 
-        // Si no hay jugador, no calculamos el imán
         if (jugador == null) return;
 
-        // 3. Comprobamos la distancia entre la gema y el jugador
-        float distancia = Vector3.Distance(transform.position, jugador.position);
-
-        // Si entra en el rango, activamos el imán para siempre
-        if (distancia <= rangoAtraccion)
+        if (!siendoAtraida)
         {
-            siendoAtraida = true;
+            // sqrMagnitude es ~3x más rápido que Vector3.Distance
+            float sqrDist = (transform.position - jugador.position).sqrMagnitude;
+            if (sqrDist <= rangoAtraccionSqr)
+                siendoAtraida = true;
         }
 
-        // 4. Si el imán está activado, volamos hacia el jugador
         if (siendoAtraida)
         {
             velocidadAtraccion = Mathf.Min(velocidadAtraccion + Time.deltaTime * 15f, 40f);
-            Vector3 objetivo = jugador.position + Vector3.up * 1f;
-            transform.position = Vector3.MoveTowards(transform.position, objetivo, velocidadAtraccion * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position,
+                jugador.position + Vector3.up * 1f, velocidadAtraccion * Time.deltaTime);
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Cuando por fin toca al jugador, da la experiencia y se destruye
-        if (other.CompareTag("Player"))
-        {
-            PlayerStats ps = other.GetComponent<PlayerStats>();
-            if (ps != null)
-            {
-                ps.GanarExperiencia(cantidadExperiencia);
-            }
-            
-            Destroy(gameObject);
-        }
+        if (!other.CompareTag("Player")) return;
+        PlayerStats ps = other.GetComponent<PlayerStats>();
+        if (ps != null) ps.GanarExperiencia(cantidadExperiencia);
+        Destroy(gameObject);
     }
 }
