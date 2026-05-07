@@ -35,7 +35,8 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
 
     void Start()
     {
-        jugador = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) jugador = p.transform;
         rb = GetComponent<Rigidbody>();
         alturaInicial = transform.position.y;
     }
@@ -129,13 +130,20 @@ public void RecibirDano(float cantidad)
         // 2. Restar vida
         vida -= cantidad;
 
-        // 3. Morir y soltar objetos
+        // 3. Knockback
+        if (jugador != null)
+        {
+            Vector3 direccionEmpuje = (transform.position - jugador.position).normalized;
+            direccionEmpuje.y = 0f;
+            transform.position += direccionEmpuje * 0.25f;
+        }
+
+        // 4. Morir y soltar objetos
         if (vida <= 0f)
         {
             if (GameManager.Instancia != null)
                 GameManager.Instancia.SumarEliminado();
 
-            // Soltar Cofre o Gema a la altura correcta (0.3f)
             if (prefabCofre != null && Random.value <= probabilidadCofre)
             {
                 Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
@@ -152,14 +160,6 @@ public void RecibirDano(float cantidad)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
 
             Destroy(gameObject);
-        }
-    }
-    private void OnDestroy()
-    {
-        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
-        if (GameManager.Instancia != null)
-        {
-            GemaManager.Instance.GenerarGemas(transform.position);
         }
     }
 }

@@ -7,46 +7,45 @@ public class ConexionUI : MonoBehaviour
     [Header("Arrastra aquí los elementos del Canvas")]
     public TextMeshProUGUI textoVida;
     public TextMeshProUGUI textoEnemigos;
-    public TextMeshProUGUI textoRonda; 
+    public TextMeshProUGUI textoRonda;
     public TextMeshProUGUI textoTiempo;
     public TextMeshProUGUI textoNivelJugador;
+    public TextMeshProUGUI textoMundoNivel;
     public Slider sliderExperiencia;
     public GameObject panelVictoria;
     public GameObject panelGameOver;
 
     void Start()
     {
-        // Le pasamos todas estas referencias frescas al GameManager Inmortal
-        if (GameManager.Instancia != null)
-        {
-            GameManager.Instancia.textoVida = this.textoVida;
-            GameManager.Instancia.textoEnemigos = this.textoEnemigos;
-            GameManager.Instancia.textoRonda = this.textoRonda;
-            GameManager.Instancia.textoTiempo = this.textoTiempo;
-            GameManager.Instancia.textoNivelJugador = this.textoNivelJugador;
-            GameManager.Instancia.sliderExperiencia = this.sliderExperiencia;
-            
-            GameManager.Instancia.panelVictoria = this.panelVictoria;
-            GameManager.Instancia.panelGameOver = this.panelGameOver;
+        if (GameManager.Instancia == null) return;
 
-            // Nos aseguramos de que los paneles empiecen ocultos
-            if(panelVictoria != null) panelVictoria.SetActive(false);
-            if(panelGameOver != null) panelGameOver.SetActive(false);
+        GameManager.Instancia.textoVida         = textoVida;
+        GameManager.Instancia.textoEnemigos     = textoEnemigos;
+        GameManager.Instancia.textoRonda        = textoRonda;
+        GameManager.Instancia.textoTiempo       = textoTiempo;
+        GameManager.Instancia.textoNivelJugador = textoNivelJugador;
+        GameManager.Instancia.textoMundoNivel   = textoMundoNivel;
+        GameManager.Instancia.sliderExperiencia = sliderExperiencia;
+        GameManager.Instancia.panelVictoria     = panelVictoria;
+        GameManager.Instancia.panelGameOver     = panelGameOver;
 
-            GameManager.Instancia.ActualizarUI();
-        }
+        // Cachear referencia al jugador desde la escena
+        PlayerStats ps = FindFirstObjectByType<PlayerStats>();
+        if (ps != null) GameManager.Instancia.playerStats = ps;
+
+        if (panelVictoria  != null) panelVictoria.SetActive(false);
+        if (panelGameOver  != null) panelGameOver.SetActive(false);
+
+        GameManager.Instancia.ActualizarUI();
     }
 
-    // Funciones puente para los botones. ¡Nunca se romperán!
     public void BotonContinuarInfinito()
     {
-        if (GameManager.Instancia != null)
-            GameManager.Instancia.ContinuarModoInfinito();
+        GameManager.Instancia?.ContinuarModoInfinito();
     }
 
     public void BotonSalirMenu()
     {
-        if (GameManager.Instancia != null)
-            GameManager.Instancia.SalirAlMenu();
+        GameManager.Instancia?.SalirAlMenu();
     }
 }

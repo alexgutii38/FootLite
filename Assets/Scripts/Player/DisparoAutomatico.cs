@@ -6,22 +6,26 @@ public class DisparoAutomatico : MonoBehaviour
 {
     public GameObject balaPrefab;
     private Transform puntoDisparo;
-   
+
     private float cadenciaDisparo;
     private float rangoDisparo;
-    private int maxBalasSimultaneas = 1; // Renombrado para que se entienda mejor (antes numDirecciones)
+    private int maxBalasSimultaneas = 1;
     public AudioClip sonidoChute;
     public AudioSource audioSource;
     private float siguienteDisparo = 0f;
 
+    private PlayerStats statsCache;
+
     void Start()
     {
+        statsCache = GetComponent<PlayerStats>();
+
         puntoDisparo = transform.Find("PuntoDisparo");
         if (puntoDisparo == null)
         {
             GameObject temp = new GameObject("PuntoDisparo");
             temp.transform.SetParent(transform);
-            temp.transform.localPosition = Vector3.zero;    
+            temp.transform.localPosition = Vector3.zero;
             puntoDisparo = temp.transform;
         }
 
@@ -41,43 +45,33 @@ public class DisparoAutomatico : MonoBehaviour
 
     void ActualizarStats()
     {
-        PlayerStats stats = GetComponent<PlayerStats>();
-        if (stats != null)
-        {
-            cadenciaDisparo = stats.cadenciaDisparo;
-            rangoDisparo = stats.rangoDisparo;
-            
-            maxBalasSimultaneas = 1+ stats.cantidadDirecciones;
-        }
+        if (statsCache == null) return;
+        cadenciaDisparo = statsCache.cadenciaDisparo;
+        rangoDisparo = statsCache.rangoDisparo;
+        maxBalasSimultaneas = 1 + statsCache.cantidadDirecciones;
     }
 
     void DispararAEnemigos()
     {
-        // 1. Buscar todos los enemigos en rango
         Collider[] colls = Physics.OverlapSphere(puntoDisparo.position, rangoDisparo, LayerMask.GetMask("Enemies"));
-       
         if (colls.Length == 0) return;
 
-        // 2. Ordenarlos por distancia (de más cerca a más lejos)
         var enemigosOrdenados = colls
             .OrderBy(c => Vector3.Distance(puntoDisparo.position, c.transform.position))
-            .Take(maxBalasSimultaneas) // Coger solo los N primeros
+            .Take(maxBalasSimultaneas)
             .ToList();
 
-        // 3. Disparar a cada uno de los seleccionados
+        float volEfectos = AudioManager.Instancia != null
+            ? AudioManager.Instancia.ObtenerVolumenEfectos()
+            : PlayerPrefs.GetFloat("VolumenEfectos", 1f);
+
         foreach (var enemigo in enemigosOrdenados)
         {
-            if (enemigo != null)
-            {
-                Vector3 direccion = (enemigo.transform.position - puntoDisparo.position).normalized;
-               
-                // Orientar punto de disparo (opcional, visual)
-                // puntoDisparo.rotation = Quaternion.LookRotation(direccion);
-
-                // Crear bala mirando al enemigo
-                Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(direccion));
-                audioSource.PlayOneShot(sonidoChute);
-            }
+            if (enemigo == null) continue;
+            Vector3 direccion = (enemigo.transform.position - puntoDisparo.position).normalized;
+            Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(direccion));
+            if (audioSource != null && sonidoChute != null)
+                audioSource.PlayOneShot(sonidoChute, volEfectos);
         }
     }
 }

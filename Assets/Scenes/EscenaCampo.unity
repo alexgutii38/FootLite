@@ -3070,6 +3070,7 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -3183,6 +3184,20 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fda570306339c8488521c5a37e3f53e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CamaraTemblar
+  duracion: 0.2
+  magnitud: 0.15
 --- !u!1001 &994928613
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3581,6 +3596,9 @@ MonoBehaviour:
   textoOpcion1: {fileID: 224687865}
   textoOpcion2: {fileID: 1386894703}
   textoOpcion3: {fileID: 787318197}
+  botonOpcion1: {fileID: 0}
+  botonOpcion2: {fileID: 0}
+  botonOpcion3: {fileID: 0}
 --- !u!1 &1108540259
 GameObject:
   m_ObjectHideFlags: 0
@@ -5425,7 +5443,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1688729257
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5818,6 +5836,7 @@ MonoBehaviour:
   textoRonda: {fileID: 0}
   textoTiempo: {fileID: 1577365698}
   textoNivelJugador: {fileID: 445003356}
+  textoMundoNivel: {fileID: 0}
   sliderExperiencia: {fileID: 2061785790}
   panelVictoria: {fileID: 666730176}
   panelGameOver: {fileID: 0}
@@ -6128,6 +6147,7 @@ MonoBehaviour:
   textoRonda: {fileID: 0}
   textoTiempo: {fileID: 1577365698}
   textoNivelJugador: {fileID: 445003356}
+  textoMundoNivel: {fileID: 0}
   sliderExperiencia: {fileID: 2061785790}
   panelGameOver: {fileID: 0}
   playerStats: {fileID: 392490085}

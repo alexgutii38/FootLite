@@ -40,7 +40,8 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
 
     void Start()
     {
-        jugador = GameObject.FindGameObjectWithTag("Player").transform;
+        GameObject p = GameObject.FindGameObjectWithTag("Player");
+        if (p != null) jugador = p.transform;
         rb = GetComponent<Rigidbody>();
         alturaInicial = transform.position.y;
     }
@@ -75,7 +76,9 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
                 rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
 
-        animator.SetFloat("speed", velocidadMovimiento, 0.1f, Time.deltaTime);
+        bool moviendose = distancia <= rangoDeteccion;
+        if (animator != null)
+            animator.SetFloat("speed", moviendose ? velocidadMovimiento : 0f, 0.1f, Time.deltaTime);
 
         // Separación y altura mantienen igual...
         Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, LayerMask.GetMask("Enemies"));
@@ -100,7 +103,6 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
         }
 
         // Mantener altura constante
-        animator.SetFloat("speed", velocidadMovimiento, 0.1f, Time.deltaTime);
         Vector3 posicionY = transform.position;
         posicionY.y = alturaInicial;
         transform.position = posicionY;
@@ -135,17 +137,13 @@ public void RecibirDano(float cantidad)
         // 2. Restar vida
         vida -= cantidad;
 
-        // --- EFECTO KNOCKBACK (Peso de las balas) ---
-        GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
-        if (jugadorObj != null)
+        // Knockback
+        if (jugador != null)
         {
-            Vector3 direccionEmpuje = (transform.position - jugadorObj.transform.position).normalized;
-            direccionEmpuje.y = 0f; // Evitamos que salgan volando hacia arriba
-            
-            // Les damos un pequeño empujón de 25 centímetros hacia atrás
-            transform.position += direccionEmpuje * 0.25f; 
+            Vector3 direccionEmpuje = (transform.position - jugador.position).normalized;
+            direccionEmpuje.y = 0f;
+            transform.position += direccionEmpuje * 0.25f;
         }
-        // --------------------------------------------
 
         // 3. Morir y soltar objetos
         if (vida <= 0f)
@@ -170,14 +168,6 @@ public void RecibirDano(float cantidad)
                 Instantiate(efectoMuerte, transform.position, Quaternion.identity);
 
             Destroy(gameObject);
-        }
-    }
-    private void OnDestroy()
-    {
-        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
-        if (GameManager.Instancia != null)
-        {
-            GemaManager.Instance.GenerarGemas(transform.position);
         }
     }
 }

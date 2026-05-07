@@ -286,13 +286,5 @@ public void RecibirDano(float cantidad)
             Destroy(gameObject);
         }
     }
-    private void OnDestroy()
-    {
-        // Al destruirse (por morir o al cambiar de escena), se resta del contador global
-        if (GameManager.Instancia != null)
-        {
-            GemaManager.Instance.GenerarGemas(transform.position);
-        }
-    }
 
 }

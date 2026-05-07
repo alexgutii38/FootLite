@@ -11,13 +11,13 @@ public class GameManager : MonoBehaviour
     public int enemigosEliminados = 0;
 
     [Header("Optimización")]
-    public int enemigosActivos = 0; 
+    public int enemigosActivos = 0;
 
     [Header("Ronda / nivel / tiempo")]
     public float tiempoPartida = 0f;
     public bool juegoEnPausa = false;
-    
-    [Header("Condición de Victoria (Modo Supervivencia)")]
+
+    [Header("Condición de Victoria")]
     public float tiempoParaGanar = 480f;
     public bool nivelCompletado = false;
     public GameObject panelVictoria;
@@ -25,11 +25,12 @@ public class GameManager : MonoBehaviour
     [Header("Referencias de UI")]
     public TextMeshProUGUI textoVida;
     public TextMeshProUGUI textoEnemigos;
-    public TextMeshProUGUI textoRonda; 
-    
-    [Header("Nuevos Elementos HUD")]
+    public TextMeshProUGUI textoRonda;
+
+    [Header("HUD Principal")]
     public TextMeshProUGUI textoTiempo;
     public TextMeshProUGUI textoNivelJugador;
+    public TextMeshProUGUI textoMundoNivel;
     public Slider sliderExperiencia;
 
     public GameObject panelGameOver;
@@ -79,7 +80,7 @@ public class GameManager : MonoBehaviour
 
             if (textoTiempo != null)
             {
-                int minutos = Mathf.FloorToInt(tiempoPartida / 60F);
+                int minutos = Mathf.FloorToInt(tiempoPartida / 60f);
                 int segundos = Mathf.FloorToInt(tiempoPartida - minutos * 60);
                 textoTiempo.text = string.Format("{0:00}:{1:00}", minutos, segundos);
             }
@@ -92,7 +93,11 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            PausarJuego(!juegoEnPausa);
+            // No pausar si el panel de level-up está activo
+            LevelUpManager lu = FindFirstObjectByType<LevelUpManager>();
+            bool levelUpAbierto = lu != null && lu.gameObject.activeSelf;
+            if (!levelUpAbierto)
+                PausarJuego(!juegoEnPausa);
         }
     }
 
@@ -150,7 +155,7 @@ public class GameManager : MonoBehaviour
 
     public void ActualizarUI()
     {
-        if(playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
+        if (playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
 
         if (textoVida != null) textoVida.text = "Vida: " + (playerStats != null ? playerStats.vidaActual : 0);
         if (textoEnemigos != null) textoEnemigos.text = "Muertes: " + enemigosEliminados;
@@ -160,6 +165,12 @@ public class GameManager : MonoBehaviour
             if (textoNivelJugador != null) textoNivelJugador.text = "Nivel: " + playerStats.nivel;
             if (sliderExperiencia != null)
                 sliderExperiencia.maxValue = playerStats.experienciaSiguienteNivel;
+        }
+
+        // Mostrar mundo y nivel actuales
+        if (textoMundoNivel != null && NivelManager.Instancia != null)
+        {
+            textoMundoNivel.text = $"M{NivelManager.Instancia.mundoSeleccionado}-N{NivelManager.Instancia.nivelSeleccionado}";
         }
     }
 
@@ -176,15 +187,15 @@ public class GameManager : MonoBehaviour
     public void ReiniciarValores()
     {
         enemigosEliminados = 0;
-        enemigosActivos = 0; 
+        enemigosActivos = 0;
         tiempoPartida = 0f;
-        nivelCompletado = false; // <-- Resetear condición de victoria
+        nivelCompletado = false;
         juegoEnPausa = false;
-        
+
         if (panelVictoria != null) panelVictoria.SetActive(false);
 
-        if(playerStats == null) playerStats = FindFirstObjectByType<PlayerStats>();
-        if(playerStats != null) playerStats.vidaActual = playerStats.vidaMaxima;
+        playerStats = FindFirstObjectByType<PlayerStats>();
+        if (playerStats != null) playerStats.vidaActual = playerStats.vidaMaxima;
 
         ActualizarUI();
     }
@@ -193,7 +204,7 @@ public class GameManager : MonoBehaviour
     {
         GameObject objVida = GameObject.Find("textoVida");
         if (objVida != null) textoVida = objVida.GetComponent<TextMeshProUGUI>();
-        
+
         GameObject objEnemigos = GameObject.Find("textoEnemigos");
         if (objEnemigos != null) textoEnemigos = objEnemigos.GetComponent<TextMeshProUGUI>();
     }

@@ -53,10 +53,7 @@ public class GemaExperiencia : MonoBehaviour
         // 4. Si el imán está activado, volamos hacia el jugador
         if (siendoAtraida)
         {
-            // Aceleramos la gema con el tiempo para que siempre te alcance aunque corras
-            velocidadAtraccion += Time.deltaTime * 15f; 
-            
-            // Movemos la gema hacia el centro del jugador (apuntando al pecho)
+            velocidadAtraccion = Mathf.Min(velocidadAtraccion + Time.deltaTime * 15f, 40f);
             Vector3 objetivo = jugador.position + Vector3.up * 1f;
             transform.position = Vector3.MoveTowards(transform.position, objetivo, velocidadAtraccion * Time.deltaTime);
         }

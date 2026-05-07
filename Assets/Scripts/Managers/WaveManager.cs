@@ -24,7 +24,7 @@ public class WaveManager : MonoBehaviour
 
     [Header("Jefe Final")]
     public GameObject prefabBoss;
-    public float tiempoAparicionBoss = 60f; // Aparece a los 60 segundos
+    public float tiempoAparicionBoss = 60f;
     private bool bossAparecido = false;
 
     [Header("Seguridad")]
@@ -38,8 +38,13 @@ public class WaveManager : MonoBehaviour
 
     private int cicloCompleto = 0;
     private float multiplicadorDificultad = 1.0f;
-    
-    private float dificultadBaseDelNivel = 1.0f; 
+    private float dificultadBaseDelNivel = 1.0f;
+
+    // Multiplicador de velocidad de spawn (más alto = más enemigos más rápido)
+    private float multiplicadorSpawnRate = 1.0f;
+
+    // Cap: dificultad no supera 8x la base del nivel (ciclos infinitos no se vuelven imposibles)
+    private const float CAP_CICLOS = 8f;
 
     void Start()
     {
@@ -61,15 +66,32 @@ public class WaveManager : MonoBehaviour
         int mundo = NivelManager.Instancia.mundoSeleccionado;
         int nivel = NivelManager.Instancia.nivelSeleccionado;
 
-        NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
+        // ─── BALANCEO 3x3 ───────────────────────────────────────────────────────
+        // Fórmula: M1N1=1.0 … M3N3=2.7  (mundo tiene más peso que nivel)
+        dificultadBaseDelNivel = 1f + (mundo - 1) * 0.6f + (nivel - 1) * 0.25f;
+        multiplicadorDificultad = dificultadBaseDelNivel;
 
-        dificultadBaseDelNivel = 1f + ((mundo - 1) * 0.5f) + ((nivel - 1) * 0.2f);
-        multiplicadorDificultad = dificultadBaseDelNivel; 
+        // Spawn rate: en M3N3 spawnan 1.8x más enemigos y más rápido
+        multiplicadorSpawnRate = 1f + (mundo - 1) * 0.3f + (nivel - 1) * 0.1f;
+
+        // Boss aparece antes en mundos más altos: M1→60s, M2→45s, M3→30s
+        tiempoAparicionBoss = Mathf.Max(30f, 75f - mundo * 15f);
+
+        // Tiempo para ganar: progresivo según mundo/nivel (300s … 480s)
+        if (GameManager.Instancia != null)
+        {
+            float tiempoBase = 300f;
+            float tiempoExtra = (mundo - 1) * 60f + (nivel - 1) * 30f;
+            GameManager.Instancia.tiempoParaGanar = tiempoBase + tiempoExtra;
+        }
+        // ────────────────────────────────────────────────────────────────────────
+
+        NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
 
         if (config != null)
         {
             oleadas = new List<WaveConfig>(config.oleadas);
-            Debug.Log($"Cargando Mundo {mundo} - Nivel {nivel}: {config.nombreNivel} | Dificultad Base: {dificultadBaseDelNivel}x");
+            Debug.Log($"Mundo {mundo} Nivel {nivel}: {config.nombreNivel} | Base {dificultadBaseDelNivel:F2}x | SpawnRate {multiplicadorSpawnRate:F2}x | Boss a {tiempoAparicionBoss}s");
         }
         else
         {
@@ -104,7 +126,8 @@ public class WaveManager : MonoBehaviour
         if (Time.time >= tiempoSiguienteSpawn)
         {
             SpawnEnemigos();
-            tiempoSiguienteSpawn = Time.time + oleadaActual.intervaloSpawn;
+            // Intervalo reducido por spawn rate (más rápido en mundos altos)
+            tiempoSiguienteSpawn = Time.time + oleadaActual.intervaloSpawn / multiplicadorSpawnRate;
         }
     }
 
@@ -117,8 +140,10 @@ public class WaveManager : MonoBehaviour
         if (indice == 0 && indiceOleadaActual != 0)
         {
             cicloCompleto++;
-            multiplicadorDificultad = dificultadBaseDelNivel * Mathf.Pow(1.15f, cicloCompleto);
-            Debug.Log($"=== CICLO {cicloCompleto + 1} (INFINITO) === Multiplicador Total: {multiplicadorDificultad:F2}x");
+            float sinCap = dificultadBaseDelNivel * Mathf.Pow(1.15f, cicloCompleto);
+            float capAbsoluto = dificultadBaseDelNivel * CAP_CICLOS;
+            multiplicadorDificultad = Mathf.Min(sinCap, capAbsoluto);
+            Debug.Log($"=== CICLO {cicloCompleto + 1} === Multiplicador: {multiplicadorDificultad:F2}x");
         }
 
         indiceOleadaActual = indice;
@@ -126,9 +151,7 @@ public class WaveManager : MonoBehaviour
         tiempoTranscurridoOleada = 0f;
 
         if (GameManager.Instancia != null)
-        {
             GameManager.Instancia.ActualizarTextoOleada(indiceOleadaActual + 1, oleadas.Count, cicloCompleto);
-        }
     }
 
     void PasarSiguienteOleada()
@@ -145,11 +168,19 @@ public class WaveManager : MonoBehaviour
             Bounds limites = rendererSuelo.bounds;
             float x = Random.Range(limites.min.x + margenBorde, limites.max.x - margenBorde);
             float z = Random.Range(limites.min.z + margenBorde, limites.max.z - margenBorde);
-            float alturaSuelo = transform.position.y + 0.4f;
-            posicionSpawn = new Vector3(x, alturaSuelo, z);
+            posicionSpawn = new Vector3(x, transform.position.y + 0.4f, z);
         }
 
-        Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
+        GameObject bossObj = Instantiate(prefabBoss, posicionSpawn, Quaternion.identity);
+
+        // Escalar boss según dificultad del mundo/nivel
+        EnemigoBoss boss = bossObj.GetComponent<EnemigoBoss>();
+        if (boss != null)
+        {
+            boss.vida = Mathf.Round(400f * dificultadBaseDelNivel);
+            boss.danoPorContacto = Mathf.RoundToInt(25 * dificultadBaseDelNivel * 0.8f);
+            boss.velocidadMovimiento = Mathf.Min(boss.velocidadMovimiento * (1f + (dificultadBaseDelNivel - 1f) * 0.3f), 3.5f);
+        }
     }
 
     void SpawnEnemigos()
@@ -158,7 +189,8 @@ public class WaveManager : MonoBehaviour
         if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0) return;
 
         float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
-        int cantidad = oleadaActual.enemigosPorSpawn;
+        // Cantidad escalada por spawn rate
+        int cantidad = Mathf.Max(1, Mathf.RoundToInt(oleadaActual.enemigosPorSpawn * multiplicadorSpawnRate));
 
         Bounds boundsSuelo = new Bounds();
         bool tieneBounds = false;
@@ -184,10 +216,9 @@ public class WaveManager : MonoBehaviour
             Vector3 rayStart = new Vector3(spawnPos.x, startY, spawnPos.z);
 
             RaycastHit hit;
-            bool hitOk = false;
-
-            if (groundLayer.value == 0) hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f);
-            else hitOk = Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f, groundLayer);
+            bool hitOk = groundLayer.value == 0
+                ? Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f)
+                : Physics.Raycast(rayStart, Vector3.down, out hit, rayAltura * 2f, groundLayer);
 
             if (hitOk) spawnPos.y = hit.point.y + offsetSuelo;
             else spawnPos.y = jugador.position.y;
@@ -200,51 +231,44 @@ public class WaveManager : MonoBehaviour
             if (particulaSpawn != null)
             {
                 ParticleSystem particulaObj = Instantiate(particulaSpawn, spawnPos, Quaternion.identity);
-                float tiempoVidaParticula = particulaObj.main.startLifetime.constantMax;
-                Destroy(particulaObj.gameObject, tiempoVidaParticula);
-
-                var colorOverLifetime = particulaObj.colorOverLifetime;
-                Gradient grad = new Gradient();
-                grad.colorKeys = new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 1f, 1f, 0f), 1f) };
-                grad.alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) };
-                colorOverLifetime.color = grad;
+                Destroy(particulaObj.gameObject, particulaObj.main.startLifetime.constantMax);
             }
 
-            // 1. Intentamos escalar si es un Caminante
-            EnemigoCaminante scriptCam = enemigo.GetComponent<EnemigoCaminante>();
-            if (scriptCam != null)
-            {
-                scriptCam.vida *= dificultadTotal;
-                scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.8f);
-                scriptCam.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                scriptCam.velocidadMovimiento = Mathf.Min(scriptCam.velocidadMovimiento, 5.5f);
-                scriptCam.experienciaAlMorir = Mathf.RoundToInt(scriptCam.experienciaAlMorir * dificultadTotal);
-            }
+            EscalarEnemigo(enemigo, dificultadTotal);
+        }
+    }
 
-            // 2. Intentamos escalar si es un Delantero
-            EnemigoDelantero scriptDel = enemigo.GetComponent<EnemigoDelantero>();
-            if (scriptDel != null)
-            {
-                scriptDel.vida *= dificultadTotal;
-                scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.8f);
-                scriptDel.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                scriptDel.velocidadMovimiento = Mathf.Min(scriptDel.velocidadMovimiento, 5.5f);
-                scriptDel.experienciaAlMorir = Mathf.RoundToInt(scriptDel.experienciaAlMorir * dificultadTotal);
-            }
+    private void EscalarEnemigo(GameObject enemigo, float dificultadTotal)
+    {
+        EnemigoCaminante scriptCam = enemigo.GetComponent<EnemigoCaminante>();
+        if (scriptCam != null)
+        {
+            scriptCam.vida *= dificultadTotal;
+            scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.8f);
+            scriptCam.velocidadMovimiento = Mathf.Min(scriptCam.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
+            scriptCam.experienciaAlMorir = Mathf.RoundToInt(scriptCam.experienciaAlMorir * dificultadTotal);
+            return;
+        }
 
-            // 3. Intentamos escalar si es un Árbitro
-            EnemigoArbitro scriptArb = enemigo.GetComponent<EnemigoArbitro>();
-            if (scriptArb != null)
-            {
-                scriptArb.vida *= dificultadTotal;
-                scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.8f);
-                scriptArb.velocidadMovimiento *= oleadaActual.multiplicadorVelocidad;
-                scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento, 5.5f);
-                scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
-                
-                scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
-                scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
-            }
-        } 
-    } 
+        EnemigoDelantero scriptDel = enemigo.GetComponent<EnemigoDelantero>();
+        if (scriptDel != null)
+        {
+            scriptDel.vida *= dificultadTotal;
+            scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.8f);
+            scriptDel.velocidadMovimiento = Mathf.Min(scriptDel.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
+            scriptDel.experienciaAlMorir = Mathf.RoundToInt(scriptDel.experienciaAlMorir * dificultadTotal);
+            return;
+        }
+
+        EnemigoArbitro scriptArb = enemigo.GetComponent<EnemigoArbitro>();
+        if (scriptArb != null)
+        {
+            scriptArb.vida *= dificultadTotal;
+            scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.8f);
+            scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
+            scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
+            scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
+            scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
+        }
+    }
 }

@@ -55,6 +55,7 @@ public class PlayerStats : MonoBehaviour
     {
         vidaActual -= dano;
         if (vignette != null) vignette.MostrarEfecto();
+        if (CamaraTemblar.Instancia != null) CamaraTemblar.Instancia.Temblar();
         if (vidaActual < 0) vidaActual = 0;
 
         if (GameManager.Instancia != null)
