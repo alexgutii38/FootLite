@@ -25,6 +25,7 @@ public class PlayerStats : MonoBehaviour
     private float acumuladorRegeneracion = 0f;
 
     private VignetteDano vignette;
+    private LevelUpManager levelUpManagerCache;
 
     void Start()
     {
@@ -56,6 +57,7 @@ public class PlayerStats : MonoBehaviour
         vidaActual -= dano;
         if (vignette != null) vignette.MostrarEfecto();
         if (CamaraTemblar.Instancia != null) CamaraTemblar.Instancia.Temblar();
+        AudioManager.Instancia?.SonarDano();
         if (vidaActual < 0) vidaActual = 0;
 
         if (GameManager.Instancia != null)
@@ -91,9 +93,10 @@ public class PlayerStats : MonoBehaviour
         float nuevoObjetivo = 1.50f * Mathf.Pow(nivel + 3, 2);
         experienciaSiguienteNivel = Mathf.RoundToInt(nuevoObjetivo);
 
-        LevelUpManager manager = FindFirstObjectByType<LevelUpManager>();
-        if (manager != null)
-            manager.MostrarOpciones(this);
+        if (levelUpManagerCache == null)
+            levelUpManagerCache = FindFirstObjectByType<LevelUpManager>();
+        if (levelUpManagerCache != null)
+            levelUpManagerCache.MostrarOpciones(this);
     }
 
     // MÉTODOS PARA GEMAS

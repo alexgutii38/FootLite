@@ -14,6 +14,7 @@ public class ConexionUI : MonoBehaviour
     public Slider sliderExperiencia;
     public GameObject panelVictoria;
     public GameObject panelGameOver;
+    public GameObject panelPausa;
 
     void Start()
     {
@@ -28,6 +29,7 @@ public class ConexionUI : MonoBehaviour
         GameManager.Instancia.sliderExperiencia = sliderExperiencia;
         GameManager.Instancia.panelVictoria     = panelVictoria;
         GameManager.Instancia.panelGameOver     = panelGameOver;
+        GameManager.Instancia.panelPausa        = panelPausa;
 
         // Cachear referencia al jugador desde la escena
         PlayerStats ps = FindFirstObjectByType<PlayerStats>();
@@ -35,8 +37,12 @@ public class ConexionUI : MonoBehaviour
 
         if (panelVictoria  != null) panelVictoria.SetActive(false);
         if (panelGameOver  != null) panelGameOver.SetActive(false);
+        if (panelPausa     != null) panelPausa.SetActive(false);
 
         GameManager.Instancia.ActualizarUI();
+
+        // Arranca la música de partida (si AudioManager existe en la escena).
+        AudioManager.Instancia?.ReproducirMusicaPartida();
     }
 
     public void BotonContinuarInfinito()

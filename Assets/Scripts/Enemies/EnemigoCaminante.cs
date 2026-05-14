@@ -32,6 +32,9 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
     private LayerMask enemiesLayer;
     private float     separacionTimer;
 
+    // Buffer estático reutilizable: evita asignar un array en cada OverlapSphere
+    private static readonly Collider[] bufferVecinos = new Collider[16];
+
     void Start()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -83,10 +86,11 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
         {
             separacionTimer = 0.1f;
 
-            Collider[] vecinos = Physics.OverlapSphere(transform.position, 0.25f, enemiesLayer);
-            foreach (Collider col in vecinos)
+            int numVecinos = Physics.OverlapSphereNonAlloc(transform.position, 0.25f, bufferVecinos, enemiesLayer);
+            for (int i = 0; i < numVecinos; i++)
             {
-                if (col.gameObject == gameObject) continue;
+                Collider col = bufferVecinos[i];
+                if (col == null || col.gameObject == gameObject) continue;
                 Vector3 sep = (transform.position - col.transform.position).normalized;
                 transform.position += sep * 0.15f;
             }
@@ -132,14 +136,15 @@ public class EnemigoCaminante : MonoBehaviour, IDamageable
         if (vida <= 0f)
         {
             if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
+            AudioManager.Instancia?.SonarMuerteEnemigo();
 
             if (prefabCofre != null && Random.value <= probabilidadCofre)
                 Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
             else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
             {
-                GameObject gema = Instantiate(prefabGemaExperiencia,
+                GameObject gema = ObjectPool.Instancia.Obtener(prefabGemaExperiencia,
                     transform.position + Vector3.up * 0.3f, Quaternion.identity);
-                GemaExperiencia sg = gema.GetComponent<GemaExperiencia>();
+                GemaExperiencia sg = gema != null ? gema.GetComponent<GemaExperiencia>() : null;
                 if (sg != null) sg.cantidadExperiencia = experienciaAlMorir;
             }
 

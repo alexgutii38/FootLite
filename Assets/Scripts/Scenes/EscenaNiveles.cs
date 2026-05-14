@@ -13,4 +13,3 @@ public class EscenaNiveles : MonoBehaviour
         SceneManager.LoadScene("EscenaMundos");
     }
 }
-

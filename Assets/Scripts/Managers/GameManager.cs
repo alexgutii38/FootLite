@@ -36,6 +36,12 @@ public class GameManager : MonoBehaviour
     public GameObject panelGameOver;
     public PlayerStats playerStats;
 
+    [Header("Menú de Pausa")]
+    public GameObject panelPausa;
+
+    // Referencia cacheada de la escena actual (se limpia en cada carga de escena).
+    private LevelUpManager levelUpManagerCache;
+
     void Awake()
     {
         if (Instancia == null)
@@ -93,16 +99,20 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // No pausar si el panel de level-up está activo
-            LevelUpManager lu = FindFirstObjectByType<LevelUpManager>();
-            bool levelUpAbierto = lu != null && lu.gameObject.activeSelf;
+            // No pausar si el panel de level-up está activo.
+            // Se cachea de forma perezosa: solo se busca una vez por escena.
+            if (levelUpManagerCache == null)
+                levelUpManagerCache = FindFirstObjectByType<LevelUpManager>();
+
+            bool levelUpAbierto = levelUpManagerCache != null && levelUpManagerCache.gameObject.activeSelf;
             if (!levelUpAbierto)
-                PausarJuego(!juegoEnPausa);
+                AlternarPausa();
         }
     }
 
     void OnSceneLoaded(Scene escena, LoadSceneMode modo)
     {
+        levelUpManagerCache = null; // la escena cambió: la referencia anterior ya no vale
         ReiniciarContadores();
         ReiniciarValores();
         ActualizarUI();
@@ -111,6 +121,8 @@ public class GameManager : MonoBehaviour
     public void CompletarNivel()
     {
         nivelCompletado = true;
+        GuardarResultado(true);
+        AudioManager.Instancia?.SonarVictoria();
         if (panelVictoria != null)
             panelVictoria.SetActive(true);
         PausarJuego(true);
@@ -148,8 +160,56 @@ public class GameManager : MonoBehaviour
         Time.timeScale = pausar ? 0f : 1f;
     }
 
+    /// <summary>
+    /// Alterna el menú de pausa (se llama al pulsar ESC). No actúa si el
+    /// nivel ya está completado, para no tapar la pantalla de victoria.
+    /// </summary>
+    public void AlternarPausa()
+    {
+        if (nivelCompletado) return;
+
+        bool pausar = !juegoEnPausa;
+        PausarJuego(pausar);
+        if (panelPausa != null) panelPausa.SetActive(pausar);
+    }
+
+    /// <summary>Reanuda la partida desde el menú de pausa (botón "Reanudar").</summary>
+    public void ReanudarDesdePausa()
+    {
+        if (panelPausa != null) panelPausa.SetActive(false);
+        PausarJuego(false);
+    }
+
+    /// <summary>
+    /// Vuelca los datos de la partida actual en <see cref="ResultadoPartida"/>
+    /// y los registra en <see cref="SaveSystem"/> (récords y, si es victoria,
+    /// el desbloqueo del siguiente nivel).
+    /// </summary>
+    void GuardarResultado(bool victoria)
+    {
+        int mundo = NivelManager.Instancia != null ? NivelManager.Instancia.mundoSeleccionado : 1;
+        int nivel = NivelManager.Instancia != null ? NivelManager.Instancia.nivelSeleccionado : 1;
+
+        ResultadoPartida.mundo              = mundo;
+        ResultadoPartida.nivel              = nivel;
+        ResultadoPartida.tiempoSobrevivido  = tiempoPartida;
+        ResultadoPartida.enemigosEliminados = enemigosEliminados;
+        ResultadoPartida.nivelJugador       = playerStats != null ? playerStats.nivel : 1;
+        ResultadoPartida.victoria           = victoria;
+
+        SaveSystem.RegistrarResultado(mundo, nivel, tiempoPartida, enemigosEliminados,
+            out bool recordTiempo, out bool recordKills);
+        ResultadoPartida.nuevoRecordTiempo = recordTiempo;
+        ResultadoPartida.nuevoRecordKills  = recordKills;
+
+        if (victoria)
+            SaveSystem.CompletarNivel(mundo, nivel);
+    }
+
     public void GameOver()
     {
+        GuardarResultado(false);
+        AudioManager.Instancia?.SonarDerrota();
         SceneManager.LoadScene("EscenaDerrota");
     }
 

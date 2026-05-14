@@ -188,6 +188,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
             }
 
             if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
+            AudioManager.Instancia?.SonarMuerteEnemigo();
 
             if (prefabCofre != null)
             {
