@@ -71,6 +71,9 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     // Buffer estático reutilizable: evita asignar un array en cada OverlapSphere
     private static readonly Collider[] bufferSeparacion = new Collider[32];
 
+    // Efecto de impacto (se añade solo en runtime)
+    private ParpadeoDano parpadeo;
+
     private void Start()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -86,6 +89,9 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         strafeSign  = (Random.value < 0.5f) ? -1 : 1;
         tCambioLado = Time.time + Random.Range(0f, cambioLadoCada);
+
+        parpadeo = GetComponent<ParpadeoDano>();
+        if (parpadeo == null) parpadeo = gameObject.AddComponent<ParpadeoDano>();
     }
 
     private void Update()
@@ -232,6 +238,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         }
 
         vida -= cantidad;
+        if (parpadeo != null) parpadeo.Flash();
 
         // Knockback usando jugador cacheado (no FindGameObjectWithTag)
         if (jugador != null)

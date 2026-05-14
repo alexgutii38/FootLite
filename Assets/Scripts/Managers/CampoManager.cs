@@ -56,6 +56,22 @@ public class CampoManager : MonoBehaviour
     };
     private static readonly float[] FOG_DENSITY = { 0f, 0.018f, 0.030f };
 
+    // Luz direccional (sol / luna) por mundo: color, intensidad y orientación.
+    private static readonly Color[] LUZ_COLOR = {
+        new Color(1.00f, 0.96f, 0.84f),   // M1 – sol cálido neutro
+        new Color(1.00f, 0.55f, 0.25f),   // M2 – sol de atardecer
+        new Color(0.45f, 0.55f, 0.95f),   // M3 – luna azul fría
+    };
+    private static readonly float[] LUZ_INTENSIDAD = { 1.15f, 0.95f, 0.40f };
+    // Orientación de la luz: X = elevación (bajo = rasante), Y = azimut.
+    private static readonly Vector2[] LUZ_ANGULO = {
+        new Vector2(50f,  30f),   // M1 – sol alto
+        new Vector2(12f, -25f),   // M2 – sol rasante (sombras largas)
+        new Vector2(35f,  60f),   // M3 – luna
+    };
+    // Exposición del skybox procedural por mundo (M3 noche = más oscuro).
+    private static readonly float[] SKY_EXPOSURE = { 1.30f, 1.10f, 0.55f };
+
     private Material skyboxProcedural;
 
     void Start()
@@ -86,7 +102,7 @@ public class CampoManager : MonoBehaviour
         }
         else
         {
-            AplicarSkyboxProcedural(SKY_TINT[idx], GROUND_COL[idx]);
+            AplicarSkyboxProcedural(SKY_TINT[idx], GROUND_COL[idx], SKY_EXPOSURE[idx]);
         }
 
         // ── 3. Luz ambiente ───────────────────────────────────────
@@ -102,7 +118,10 @@ public class CampoManager : MonoBehaviour
             RenderSettings.fogDensity = FOG_DENSITY[idx];
         }
 
-        // ── 5. Actualizar WaveManager con el renderer del suelo ───
+        // ── 5. Luz direccional (sol / luna) ───────────────────────
+        AplicarLuzDireccional(idx);
+
+        // ── 6. Actualizar WaveManager con el renderer del suelo ───
         GameObject estadioActivo = ObtenerEstadioActivo(mundo);
         if (estadioActivo != null)
         {
@@ -143,7 +162,7 @@ public class CampoManager : MonoBehaviour
         }
     }
 
-    void AplicarSkyboxProcedural(Color cielo, Color suelo)
+    void AplicarSkyboxProcedural(Color cielo, Color suelo, float exposure)
     {
         if (skyboxProcedural == null)
         {
@@ -158,10 +177,39 @@ public class CampoManager : MonoBehaviour
 
         skyboxProcedural.SetColor("_SkyTint",     cielo);
         skyboxProcedural.SetColor("_GroundColor", suelo);
-        skyboxProcedural.SetFloat("_Exposure",    1.2f);
+        skyboxProcedural.SetFloat("_Exposure",    exposure);
         skyboxProcedural.SetFloat("_AtmosphereThickness", 1.0f);
 
         RenderSettings.skybox = skyboxProcedural;
+    }
+
+    /// <summary>
+    /// Ajusta el color, la intensidad y la orientación de la luz direccional
+    /// (sol o luna) según el mundo, para que cada uno tenga su propia
+    /// identidad visual. Usa RenderSettings.sun y, si no está definido,
+    /// busca la primera luz direccional de la escena.
+    /// </summary>
+    void AplicarLuzDireccional(int idx)
+    {
+        Light luz = RenderSettings.sun;
+
+        if (luz == null)
+        {
+            foreach (Light l in FindObjectsByType<Light>(FindObjectsSortMode.None))
+            {
+                if (l.type == LightType.Directional) { luz = l; break; }
+            }
+        }
+
+        if (luz == null)
+        {
+            Debug.LogWarning("[CampoManager] No se encontró ninguna luz direccional.");
+            return;
+        }
+
+        luz.color     = LUZ_COLOR[idx];
+        luz.intensity = LUZ_INTENSIDAD[idx];
+        luz.transform.rotation = Quaternion.Euler(LUZ_ANGULO[idx].x, LUZ_ANGULO[idx].y, 0f);
     }
 
     // Devuelve el Renderer con mayor área de bounds (probablemente el suelo)

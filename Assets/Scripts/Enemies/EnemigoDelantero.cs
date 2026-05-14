@@ -36,6 +36,9 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
     // Buffer estático reutilizable: evita asignar un array en cada OverlapSphere
     private static readonly Collider[] bufferVecinos = new Collider[16];
 
+    // Efecto de impacto (se añade solo en runtime)
+    private ParpadeoDano parpadeo;
+
     void Start()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -49,6 +52,9 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
 
         if (animator != null)
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+
+        parpadeo = GetComponent<ParpadeoDano>();
+        if (parpadeo == null) parpadeo = gameObject.AddComponent<ParpadeoDano>();
     }
 
     void Update()
@@ -125,6 +131,7 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
         }
 
         vida -= cantidad;
+        if (parpadeo != null) parpadeo.Flash();
 
         if (jugador != null)
         {
