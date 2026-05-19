@@ -6,24 +6,47 @@ public class GemaExperiencia : MonoBehaviour
     public int cantidadExperiencia = 20;
 
     [Header("Imán de Gemas")]
-    public float rangoAtraccion    = 3.5f;
+    public float rangoAtraccion     = 3.5f;
     public float velocidadAtraccion = 10f;
 
     private Transform jugador;
-    private bool      siendoAtraida = false;
+    private bool      siendoAtraida;
     private Vector3   escalaFinal;
+    private Rigidbody rb;
 
     // Comparar con sqrMagnitude evita la raíz cuadrada (más rápido)
     private float rangoAtraccionSqr;
+    // Valor base para poder reiniciarlo al reutilizar la gema desde el pool
+    private float velocidadAtraccionInicial;
 
-    private void Start()
+    private void Awake()
     {
-        GameObject obj = GameObject.FindGameObjectWithTag("Player");
-        if (obj != null) jugador = obj.transform;
+        // Se captura una sola vez (sobrevive a la reutilización del pool):
+        // la escala original del prefab y la velocidad base del imán.
+        escalaFinal               = transform.localScale;
+        velocidadAtraccionInicial = velocidadAtraccion;
+        rangoAtraccionSqr         = rangoAtraccion * rangoAtraccion;
+        rb                        = GetComponent<Rigidbody>();
+    }
 
-        escalaFinal      = transform.localScale;
+    private void OnEnable()
+    {
+        // Reinicio de estado en cada (re)activación: compatible con object pooling.
+        siendoAtraida        = false;
+        velocidadAtraccion   = velocidadAtraccionInicial;
         transform.localScale = Vector3.zero;
-        rangoAtraccionSqr = rangoAtraccion * rangoAtraccion;
+
+        if (rb != null)
+        {
+            rb.linearVelocity  = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        if (jugador == null)
+        {
+            GameObject obj = GameObject.FindGameObjectWithTag("Player");
+            if (obj != null) jugador = obj.transform;
+        }
     }
 
     private void Update()
@@ -58,6 +81,8 @@ public class GemaExperiencia : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         PlayerStats ps = other.GetComponent<PlayerStats>();
         if (ps != null) ps.GanarExperiencia(cantidadExperiencia);
-        Destroy(gameObject);
+        AudioManager.Instancia?.SonarRecogerGema();
+
+        ObjectPool.Instancia.Devolver(gameObject);
     }
 }

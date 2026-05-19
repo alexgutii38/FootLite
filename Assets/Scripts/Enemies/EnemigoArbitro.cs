@@ -68,6 +68,12 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     private Vector3 separacionCacheada = Vector3.zero;
     private float   separacionTimer;
 
+    // Buffer estático reutilizable: evita asignar un array en cada OverlapSphere
+    private static readonly Collider[] bufferSeparacion = new Collider[32];
+
+    // Efecto de impacto (se añade solo en runtime)
+    private ParpadeoDano parpadeo;
+
     private void Start()
     {
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -83,6 +89,9 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
 
         strafeSign  = (Random.value < 0.5f) ? -1 : 1;
         tCambioLado = Time.time + Random.Range(0f, cambioLadoCada);
+
+        parpadeo = GetComponent<ParpadeoDano>();
+        if (parpadeo == null) parpadeo = gameObject.AddComponent<ParpadeoDano>();
     }
 
     private void Update()
@@ -153,18 +162,19 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
     {
         if (radioSeparacion <= 0f || fuerzaSeparacion <= 0f) return Vector3.zero;
 
-        Collider[] cols = (layerEnemigos.value == 0)
-            ? Physics.OverlapSphere(transform.position, radioSeparacion)
-            : Physics.OverlapSphere(transform.position, radioSeparacion, layerEnemigos);
+        int numCols = (layerEnemigos.value == 0)
+            ? Physics.OverlapSphereNonAlloc(transform.position, radioSeparacion, bufferSeparacion)
+            : Physics.OverlapSphereNonAlloc(transform.position, radioSeparacion, bufferSeparacion, layerEnemigos);
 
         Vector3 separacion = Vector3.zero;
         int     count      = 0;
 
-        for (int i = 0; i < cols.Length; i++)
+        for (int i = 0; i < numCols; i++)
         {
-            if (cols[i] == null || cols[i].transform == transform) continue;
+            Collider col = bufferSeparacion[i];
+            if (col == null || col.transform == transform) continue;
 
-            EnemigoArbitro otro = cols[i].GetComponentInParent<EnemigoArbitro>();
+            EnemigoArbitro otro = col.GetComponentInParent<EnemigoArbitro>();
             if (otro == null || otro == this) continue;
 
             Vector3 away = transform.position - otro.transform.position;
@@ -228,6 +238,7 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         }
 
         vida -= cantidad;
+        if (parpadeo != null) parpadeo.Flash();
 
         // Knockback usando jugador cacheado (no FindGameObjectWithTag)
         if (jugador != null)
@@ -240,14 +251,15 @@ public class EnemigoArbitro : MonoBehaviour, IDamageable
         if (vida <= 0f)
         {
             if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
+            AudioManager.Instancia?.SonarMuerteEnemigo();
 
             if (prefabCofre != null && Random.value <= probabilidadCofre)
                 Instantiate(prefabCofre, transform.position + Vector3.up * 0.3f, Quaternion.identity);
             else if (prefabGemaExperiencia != null && Random.value <= probabilidadGema)
             {
-                GameObject gema = Instantiate(prefabGemaExperiencia,
+                GameObject gema = ObjectPool.Instancia.Obtener(prefabGemaExperiencia,
                     transform.position + Vector3.up * 0.3f, Quaternion.identity);
-                GemaExperiencia sg = gema.GetComponent<GemaExperiencia>();
+                GemaExperiencia sg = gema != null ? gema.GetComponent<GemaExperiencia>() : null;
                 if (sg != null) sg.cantidadExperiencia = experienciaAlMorir;
             }
 

@@ -8,29 +8,23 @@ public class Bala : MonoBehaviour
     [Header("Anti-atasco al spawnear")]
     public float ignorarColisionesAlInicio = 0.05f;
 
-    private float velocidad;
-    private float dano;
+    private float velocidad = 10f;
+    private float dano      = 20f;
     private float tiempoActual;
     private float tiempoSpawn;
 
-    private void Start()
+    /// <summary>
+    /// Configura la bala al dispararla. La llama DisparoAutomatico justo
+    /// después de obtenerla del pool. Así no hace falta buscar al jugador
+    /// (FindGameObjectWithTag) una vez por cada bala, y se reinicia el
+    /// estado para que la reutilización del pool funcione correctamente.
+    /// </summary>
+    public void Inicializar(float dano, float velocidad)
     {
-        tiempoSpawn = Time.time;
-
-        // Stats leídos una sola vez al spawnearse (no cambian durante el vuelo)
-        GameObject p = GameObject.FindGameObjectWithTag("Player");
-        if (p != null)
-        {
-            PlayerStats stats = p.GetComponent<PlayerStats>();
-            if (stats != null)
-            {
-                velocidad = stats.velocidadProyectil;
-                dano      = stats.danoProyectil;
-                return;
-            }
-        }
-        velocidad = 10f;
-        dano      = 20f;
+        this.dano       = dano;
+        this.velocidad  = velocidad;
+        tiempoActual    = 0f;
+        tiempoSpawn     = Time.time;
     }
 
     private void Update()
@@ -39,7 +33,7 @@ public class Bala : MonoBehaviour
 
         tiempoActual += Time.deltaTime;
         if (tiempoActual >= tiempoVida)
-            Destroy(gameObject);
+            Devolver();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -49,12 +43,14 @@ public class Bala : MonoBehaviour
 
         IDamageable damageable = other.GetComponentInParent<IDamageable>();
         if (damageable != null)
-        {
             damageable.RecibirDano(dano);
-            Destroy(gameObject);
-            return;
-        }
 
-        Destroy(gameObject);
+        Devolver();
+    }
+
+    /// <summary>Devuelve la bala al pool (o la destruye si no proviene de uno).</summary>
+    private void Devolver()
+    {
+        ObjectPool.Instancia.Devolver(gameObject);
     }
 }

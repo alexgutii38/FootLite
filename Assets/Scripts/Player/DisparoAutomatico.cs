@@ -9,6 +9,8 @@ public class DisparoAutomatico : MonoBehaviour
     private float cadenciaDisparo;
     private float rangoDisparo;
     private int   maxBalasSimultaneas = 1;
+    private float danoBala      = 20f;
+    private float velocidadBala = 10f;
     public  AudioClip   sonidoChute;
     public  AudioSource audioSource;
     private float siguienteDisparo = 0f;
@@ -53,6 +55,8 @@ public class DisparoAutomatico : MonoBehaviour
         cadenciaDisparo    = statsCache.cadenciaDisparo;
         rangoDisparo       = statsCache.rangoDisparo;
         maxBalasSimultaneas = 1 + statsCache.cantidadDirecciones;
+        danoBala           = statsCache.danoProyectil;
+        velocidadBala      = statsCache.velocidadProyectil;
     }
 
     void DispararAEnemigos()
@@ -87,7 +91,10 @@ public class DisparoAutomatico : MonoBehaviour
             collidersBuffer[mejorIdx] = null; // marcado como usado
 
             Vector3 direccion = (objetivo.transform.position - puntoDisparo.position).normalized;
-            Instantiate(balaPrefab, puntoDisparo.position, Quaternion.LookRotation(direccion));
+            GameObject balaObj = ObjectPool.Instancia.Obtener(balaPrefab,
+                puntoDisparo.position, Quaternion.LookRotation(direccion));
+            Bala bala = balaObj != null ? balaObj.GetComponent<Bala>() : null;
+            if (bala != null) bala.Inicializar(danoBala, velocidadBala);
 
             if (audioSource != null && sonidoChute != null)
                 audioSource.PlayOneShot(sonidoChute, volEfectos);

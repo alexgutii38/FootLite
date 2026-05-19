@@ -22,9 +22,15 @@ public class PlayerStats : MonoBehaviour
     public float suerte = 0f;
     public float regeneracionVida = 0f;
 
+    [Header("Defensa")]
+    [Tooltip("Segundos de invulnerabilidad tras recibir un golpe. 0 = sin i-frames.")]
+    public float tiempoInvulnerable = 0.4f;
+
     private float acumuladorRegeneracion = 0f;
+    private float finInvulnerabilidad = 0f;
 
     private VignetteDano vignette;
+    private LevelUpManager levelUpManagerCache;
 
     void Start()
     {
@@ -53,9 +59,16 @@ public class PlayerStats : MonoBehaviour
 
     public void RecibirDano(int dano)
     {
+        // Frames de invulnerabilidad: impide que un enjambre funda al jugador
+        // de golpe. Cada enemigo lleva su propio temporizador de contacto, así
+        // que sin esto 5 enemigos encima = 5 golpes casi simultáneos.
+        if (Time.time < finInvulnerabilidad) return;
+        finInvulnerabilidad = Time.time + tiempoInvulnerable;
+
         vidaActual -= dano;
         if (vignette != null) vignette.MostrarEfecto();
         if (CamaraTemblar.Instancia != null) CamaraTemblar.Instancia.Temblar();
+        AudioManager.Instancia?.SonarDano();
         if (vidaActual < 0) vidaActual = 0;
 
         if (GameManager.Instancia != null)
@@ -91,9 +104,10 @@ public class PlayerStats : MonoBehaviour
         float nuevoObjetivo = 1.50f * Mathf.Pow(nivel + 3, 2);
         experienciaSiguienteNivel = Mathf.RoundToInt(nuevoObjetivo);
 
-        LevelUpManager manager = FindFirstObjectByType<LevelUpManager>();
-        if (manager != null)
-            manager.MostrarOpciones(this);
+        if (levelUpManagerCache == null)
+            levelUpManagerCache = FindFirstObjectByType<LevelUpManager>();
+        if (levelUpManagerCache != null)
+            levelUpManagerCache.MostrarOpciones(this);
     }
 
     // MÉTODOS PARA GEMAS

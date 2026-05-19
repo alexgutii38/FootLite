@@ -39,6 +39,7 @@ public class LevelUpManager : MonoBehaviour
     public void MostrarOpciones(PlayerStats stats)
     {
         statsJugador = stats;
+        AudioManager.Instancia?.SonarLevelUp();
         Time.timeScale = 0f;
         if (GameManager.Instancia != null)
             GameManager.Instancia.juegoEnPausa = true;

@@ -35,6 +35,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
     private Transform jugador;
     private float tiempoUltimoDano;
+    private ParpadeoDano parpadeo;
 
     private void Start()
     {
@@ -49,10 +50,13 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
         // 3. --- CONEXIÓN CON LA INTERFAZ ---
         // Le decimos a la barra que aparezca y se llene con nuestra vida máxima
-        if (BossUIManager.Instancia != null) 
+        if (BossUIManager.Instancia != null)
         {
             BossUIManager.Instancia.MostrarBarraVida(vida);
         }
+
+        parpadeo = GetComponent<ParpadeoDano>();
+        if (parpadeo == null) parpadeo = gameObject.AddComponent<ParpadeoDano>();
     }
 
     private void Update()
@@ -170,6 +174,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
 
         // 3. Restar vida real
         vida -= cantidad;
+        if (parpadeo != null) parpadeo.Flash();
 
         // 4. --- CONEXIÓN CON LA INTERFAZ ---
         // Le avisamos al Slider de que nuestra vida ha bajado
@@ -188,6 +193,7 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
             }
 
             if (GameManager.Instancia != null) GameManager.Instancia.SumarEliminado();
+            AudioManager.Instancia?.SonarMuerteEnemigo();
 
             if (prefabCofre != null)
             {
