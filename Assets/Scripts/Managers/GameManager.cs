@@ -99,12 +99,14 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // No pausar si el panel de level-up está activo.
-            // Se cachea de forma perezosa: solo se busca una vez por escena.
+            // No pausar si el panel de mejoras está visible.
             if (levelUpManagerCache == null)
                 levelUpManagerCache = FindFirstObjectByType<LevelUpManager>();
 
-            bool levelUpAbierto = levelUpManagerCache != null && levelUpManagerCache.gameObject.activeSelf;
+            bool levelUpAbierto = levelUpManagerCache != null
+                && levelUpManagerCache.panelLevelUp != null
+                && levelUpManagerCache.panelLevelUp.activeSelf;
+
             if (!levelUpAbierto)
                 AlternarPausa();
         }
@@ -190,6 +192,13 @@ public class GameManager : MonoBehaviour
     public void AlternarPausa()
     {
         if (nivelCompletado) return;
+
+        // Fallback: busca el panel de pausa si nadie lo asignó en el Inspector.
+        if (panelPausa == null)
+        {
+            MenuOpciones mo = FindFirstObjectByType<MenuOpciones>(FindObjectsInactive.Include);
+            if (mo != null) panelPausa = mo.gameObject;
+        }
 
         bool pausar = !juegoEnPausa;
         PausarJuego(pausar);

@@ -6218,7 +6218,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 89}
+  m_AnchoredPosition: {x: 0, y: -80}
   m_SizeDelta: {x: 0, y: 64.2623}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1688729258
@@ -6610,6 +6610,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossUIManager
   textoTemporizador: {fileID: 1480155325}
+  contenedorTemporizador: {fileID: 0}
   contenedorBarraVida: {fileID: 1486238118}
   sliderVida: {fileID: 205330634}
 --- !u!1 &1904787142 stripped
