@@ -1381,7 +1381,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: ea0044583775df14d9cab52189531e1d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1664,7 +1664,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: acf398048a522bf4a9b288b133baed2e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1711,8 +1711,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3284ae3a69e1ede4aa49957d61c864ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EscenaMundos
-  botonesMundo: []
-  iconosBloqueado: []
 --- !u!4 &1799329989
 Transform:
   m_ObjectHideFlags: 0
@@ -2190,7 +2188,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 2a19dc47839c8dc408c6ba9d48e264da, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

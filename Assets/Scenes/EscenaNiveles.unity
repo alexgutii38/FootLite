@@ -511,8 +511,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06e44e4c118f62e4198a7a4b957d8218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EscenaNiveles
-  botonesNivel: []
-  iconosBloqueado: []
+  imagenNivel1: {fileID: 0}
+  imagenNivel2: {fileID: 0}
+  imagenNivel3: {fileID: 0}
+  mundo1Nivel1: {fileID: 0}
+  mundo1Nivel2: {fileID: 0}
+  mundo1Nivel3: {fileID: 0}
+  mundo2Nivel1: {fileID: 0}
+  mundo2Nivel2: {fileID: 0}
+  mundo2Nivel3: {fileID: 0}
+  mundo3Nivel1: {fileID: 0}
+  mundo3Nivel2: {fileID: 0}
+  mundo3Nivel3: {fileID: 0}
 --- !u!1 &261688497
 GameObject:
   m_ObjectHideFlags: 0
@@ -1890,8 +1900,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06e44e4c118f62e4198a7a4b957d8218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EscenaNiveles
-  botonesNivel: []
-  iconosBloqueado: []
+  imagenNivel1: {fileID: 2118988901}
+  imagenNivel2: {fileID: 1492248340}
+  imagenNivel3: {fileID: 1633825618}
+  mundo1Nivel1: {fileID: 21300000, guid: 3e9ba7b9e512fbd4aae4cbec1a11b8cc, type: 3}
+  mundo1Nivel2: {fileID: 21300000, guid: 357285b574bb1ce479133382ae4403d8, type: 3}
+  mundo1Nivel3: {fileID: 21300000, guid: fe99d91b9d2341146bebedb6ccc87fb8, type: 3}
+  mundo2Nivel1: {fileID: 21300000, guid: 7429394b778ba924c86b425e5d46906e, type: 3}
+  mundo2Nivel2: {fileID: 21300000, guid: 524113c6fe81e224481cb6281327381a, type: 3}
+  mundo2Nivel3: {fileID: 21300000, guid: 78c23147d761e2642bf193220048fc16, type: 3}
+  mundo3Nivel1: {fileID: 21300000, guid: 3ad4f6fb57de43942b619ed4023fabfc, type: 3}
+  mundo3Nivel2: {fileID: 21300000, guid: 805baae58f8de7d49b54508c57a11f27, type: 3}
+  mundo3Nivel3: {fileID: 21300000, guid: 7ba8383f34d4f3049923d1ca1427be64, type: 3}
 --- !u!1 &972477805
 GameObject:
   m_ObjectHideFlags: 0
