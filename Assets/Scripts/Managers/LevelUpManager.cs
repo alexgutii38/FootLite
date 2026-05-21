@@ -74,13 +74,20 @@ public class LevelUpManager : MonoBehaviour
 
     void ActualizarTextoUI()
     {
-        if (textoOpcion1 != null) { textoOpcion1.text = DescribirOpcion(opciones[0]); textoOpcion1.color = Color.white; }
-        if (textoOpcion2 != null) { textoOpcion2.text = DescribirOpcion(opciones[1]); textoOpcion2.color = Color.white; }
-        if (textoOpcion3 != null) { textoOpcion3.text = DescribirOpcion(opciones[2]); textoOpcion3.color = Color.white; }
+        if (textoOpcion1 != null) { textoOpcion1.text = DescribirOpcion(opciones[0]); textoOpcion1.color = ColorTextoPorRareza(opciones[0].raridad); }
+        if (textoOpcion2 != null) { textoOpcion2.text = DescribirOpcion(opciones[1]); textoOpcion2.color = ColorTextoPorRareza(opciones[1].raridad); }
+        if (textoOpcion3 != null) { textoOpcion3.text = DescribirOpcion(opciones[2]); textoOpcion3.color = ColorTextoPorRareza(opciones[2].raridad); }
 
         ColorearBoton(botonOpcion1, opciones[0].raridad);
         ColorearBoton(botonOpcion2, opciones[1].raridad);
         ColorearBoton(botonOpcion3, opciones[2].raridad);
+    }
+
+    // Texto oscuro sobre fondo gris claro (común), blanco sobre fondos saturados.
+    Color ColorTextoPorRareza(Raridad raridad)
+    {
+        if (raridad == Raridad.Comun) return new Color(0.12f, 0.12f, 0.12f);
+        return Color.white;
     }
 
     void ColorearBoton(Button boton, Raridad raridad)
@@ -228,6 +235,23 @@ public class LevelUpManager : MonoBehaviour
             case TipoStat.Suerte:
                 statsJugador.suerte += v;
                 break;
+        }
+
+        // Sistema anti-frustración: si el jugador acumula varios niveles sin
+        // tocar el multidisparo, se concede +1 bala automática como bonus.
+        if (op.config.tipoStat == TipoStat.Direcciones)
+        {
+            statsJugador.nivelesSinMultidisparo = 0;
+        }
+        else
+        {
+            statsJugador.nivelesSinMultidisparo++;
+            if (statsJugador.nivelesSinMultidisparo >= statsJugador.umbralAutoMultidisparo)
+            {
+                statsJugador.cantidadDirecciones += 1;
+                statsJugador.nivelesSinMultidisparo = 0;
+                Debug.Log($"[AutoMultidisparo] +1 bala gratis (ahora {statsJugador.cantidadDirecciones + 1} balas por ráfaga)");
+            }
         }
     }
 

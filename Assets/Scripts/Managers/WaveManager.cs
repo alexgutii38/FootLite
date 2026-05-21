@@ -43,8 +43,13 @@ public class WaveManager : MonoBehaviour
     // Multiplicador de velocidad de spawn (más alto = más enemigos más rápido)
     private float multiplicadorSpawnRate = 1.0f;
 
-    // Cap: dificultad no supera 8x la base del nivel (ciclos infinitos no se vuelven imposibles)
-    private const float CAP_CICLOS = 8f;
+    // Cap: dificultad no supera 4x la base del nivel (ciclos infinitos no se vuelven imposibles)
+    private const float CAP_CICLOS = 4f;
+
+    [Header("Warm-up (suaviza los primeros segundos del nivel)")]
+    [Tooltip("Durante los primeros X segundos, dificultad y spawn rate se reducen al warmupFactor y suben linealmente a 1.")]
+    public float warmupDuracion = 30f;
+    [Range(0.3f, 1f)] public float warmupFactor = 0.6f;
 
     void Start()
     {
@@ -67,23 +72,20 @@ public class WaveManager : MonoBehaviour
         int nivel = NivelManager.Instancia.nivelSeleccionado;
 
         // ─── BALANCEO 3x3 ───────────────────────────────────────────────────────
-        // Fórmula: M1N1=1.0 … M3N3=2.7  (mundo tiene más peso que nivel)
-        dificultadBaseDelNivel = 1f + (mundo - 1) * 0.6f + (nivel - 1) * 0.25f;
+        // Curva suave: M1N1=1.00 … M3N3=1.84 (antes 2.7). Mundo pesa más que nivel.
+        dificultadBaseDelNivel = 1f + (mundo - 1) * 0.30f + (nivel - 1) * 0.12f;
         multiplicadorDificultad = dificultadBaseDelNivel;
 
-        // Spawn rate: en M3N3 spawnan 1.8x más enemigos y más rápido
-        multiplicadorSpawnRate = 1f + (mundo - 1) * 0.3f + (nivel - 1) * 0.1f;
+        // Spawn rate aún más suave: M1N1=1.00 … M3N3=1.40
+        multiplicadorSpawnRate = 1f + (mundo - 1) * 0.15f + (nivel - 1) * 0.05f;
 
-        // Boss aparece antes en mundos más altos: M1→60s, M2→45s, M3→30s
-        tiempoAparicionBoss = Mathf.Max(30f, 75f - mundo * 15f);
-
-        // Tiempo para ganar: progresivo según mundo/nivel (300s … 480s)
+        // Tiempo para ganar: niveles arcade de 2.5–4.7 min (antes 5–8 min)
+        float tiempoGanar = 150f + (mundo - 1) * 45f + (nivel - 1) * 20f;
         if (GameManager.Instancia != null)
-        {
-            float tiempoBase = 300f;
-            float tiempoExtra = (mundo - 1) * 60f + (nivel - 1) * 30f;
-            GameManager.Instancia.tiempoParaGanar = tiempoBase + tiempoExtra;
-        }
+            GameManager.Instancia.tiempoParaGanar = tiempoGanar;
+
+        // Boss aparece a la mitad del nivel: da tiempo a farmear mejoras antes
+        tiempoAparicionBoss = tiempoGanar * 0.5f;
         // ────────────────────────────────────────────────────────────────────────
 
         NivelConfig config = nivelesDisponibles.Find(n => n.mundoIndex == mundo && n.nivelIndex == nivel);
@@ -126,9 +128,19 @@ public class WaveManager : MonoBehaviour
         if (Time.time >= tiempoSiguienteSpawn)
         {
             SpawnEnemigos();
-            // Intervalo reducido por spawn rate (más rápido en mundos altos)
-            tiempoSiguienteSpawn = Time.time + oleadaActual.intervaloSpawn / multiplicadorSpawnRate;
+            // Intervalo reducido por spawn rate. Warmup ralentiza al inicio.
+            float warmup = ObtenerWarmup();
+            tiempoSiguienteSpawn = Time.time + oleadaActual.intervaloSpawn / (multiplicadorSpawnRate * warmup);
         }
+    }
+
+    // Factor de warmup: empieza en warmupFactor y crece linealmente hasta 1
+    // en warmupDuracion segundos. Da margen para farmear las primeras mejoras.
+    float ObtenerWarmup()
+    {
+        if (warmupDuracion <= 0f) return 1f;
+        float t = Mathf.Clamp01(Time.timeSinceLevelLoad / warmupDuracion);
+        return Mathf.Lerp(warmupFactor, 1f, t);
     }
 
     void IniciarOleada(int indice)
@@ -140,7 +152,7 @@ public class WaveManager : MonoBehaviour
         if (indice == 0 && indiceOleadaActual != 0)
         {
             cicloCompleto++;
-            float sinCap = dificultadBaseDelNivel * Mathf.Pow(1.15f, cicloCompleto);
+            float sinCap = dificultadBaseDelNivel * Mathf.Pow(1.08f, cicloCompleto);
             float capAbsoluto = dificultadBaseDelNivel * CAP_CICLOS;
             multiplicadorDificultad = Mathf.Min(sinCap, capAbsoluto);
             Debug.Log($"=== CICLO {cicloCompleto + 1} === Multiplicador: {multiplicadorDificultad:F2}x");
@@ -190,7 +202,7 @@ public class WaveManager : MonoBehaviour
         if (boss != null)
         {
             boss.vida = Mathf.Round(400f * dificultadBaseDelNivel);
-            boss.danoPorContacto = Mathf.RoundToInt(25 * dificultadBaseDelNivel * 0.8f);
+            boss.danoPorContacto = Mathf.RoundToInt(25 * dificultadBaseDelNivel * 0.6f);
             boss.velocidadMovimiento = Mathf.Min(boss.velocidadMovimiento * (1f + (dificultadBaseDelNivel - 1f) * 0.3f), 3.5f);
         }
     }
@@ -200,9 +212,10 @@ public class WaveManager : MonoBehaviour
         if (GameManager.Instancia != null && GameManager.Instancia.enemigosActivos >= limiteMaximoEnemigos) return;
         if (jugador == null || oleadaActual == null || oleadaActual.prefabsEnemigos.Length == 0) return;
 
-        float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad;
-        // Cantidad escalada por spawn rate
-        int cantidad = Mathf.Max(1, Mathf.RoundToInt(oleadaActual.enemigosPorSpawn * multiplicadorSpawnRate));
+        float warmup = ObtenerWarmup();
+        float dificultadTotal = oleadaActual.multiplicadorVida * multiplicadorDificultad * warmup;
+        // Cantidad escalada por spawn rate (y reducida por warmup al inicio del nivel)
+        int cantidad = Mathf.Max(1, Mathf.RoundToInt(oleadaActual.enemigosPorSpawn * multiplicadorSpawnRate * warmup));
 
         Bounds boundsSuelo = new Bounds();
         bool tieneBounds = false;
@@ -257,7 +270,7 @@ public class WaveManager : MonoBehaviour
         if (scriptCam != null)
         {
             scriptCam.vida *= dificultadTotal;
-            scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.8f);
+            scriptCam.danoPorContacto = Mathf.RoundToInt(scriptCam.danoPorContacto * dificultadTotal * 0.6f);
             scriptCam.velocidadMovimiento = Mathf.Min(scriptCam.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
             scriptCam.experienciaAlMorir = Mathf.RoundToInt(scriptCam.experienciaAlMorir * dificultadTotal);
             return;
@@ -267,7 +280,7 @@ public class WaveManager : MonoBehaviour
         if (scriptDel != null)
         {
             scriptDel.vida *= dificultadTotal;
-            scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.8f);
+            scriptDel.danoPorContacto = Mathf.RoundToInt(scriptDel.danoPorContacto * dificultadTotal * 0.6f);
             scriptDel.velocidadMovimiento = Mathf.Min(scriptDel.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
             scriptDel.experienciaAlMorir = Mathf.RoundToInt(scriptDel.experienciaAlMorir * dificultadTotal);
             return;
@@ -277,11 +290,11 @@ public class WaveManager : MonoBehaviour
         if (scriptArb != null)
         {
             scriptArb.vida *= dificultadTotal;
-            scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.8f);
+            scriptArb.danoPorContacto = Mathf.RoundToInt(scriptArb.danoPorContacto * dificultadTotal * 0.6f);
             scriptArb.velocidadMovimiento = Mathf.Min(scriptArb.velocidadMovimiento * oleadaActual.multiplicadorVelocidad, 5.5f);
             scriptArb.experienciaAlMorir = Mathf.RoundToInt(scriptArb.experienciaAlMorir * dificultadTotal);
-            scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.8f);
-            scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.8f);
+            scriptArb.danoAmarilla = Mathf.RoundToInt(scriptArb.danoAmarilla * dificultadTotal * 0.6f);
+            scriptArb.danoRoja = Mathf.RoundToInt(scriptArb.danoRoja * dificultadTotal * 0.6f);
         }
     }
 }

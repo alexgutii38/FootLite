@@ -10,12 +10,14 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
     public float tiempoEntreDanos = 1f;
 
     [Header("Habilidades del Jefe")]
-    public float tiempoEntreSprints = 8f; 
-    public float multiplicadorSprint = 4f; 
+    public float tiempoEntreSprints = 8f;
+    public float multiplicadorSprint = 4f;
+    public float tiempoAvisoSprint = 0.6f; // segundos de telegrafiado antes de cargar
     private float velocidadActual;
     private float tiempoParaSprint = 0f;
     private float tiempoFinSprint = 0f;
     private bool sprintando = false;
+    private bool avisandoSprint = false;
 
     [Header("Ataque de Tarjetas")]
     public GameObject prefabTarjeta; 
@@ -64,9 +66,23 @@ public class EnemigoBoss : MonoBehaviour, IDamageable
         if (jugador == null) return;
 
         // --- HABILIDAD 1: SPRINT ---
+        // Telegrafiado: 0.6s antes de cargar, el jefe se planta y parpadea
+        // para que el jugador pueda esquivar.
+        if (!sprintando && !avisandoSprint && Time.time >= tiempoParaSprint - tiempoAvisoSprint && Time.time < tiempoParaSprint)
+        {
+            avisandoSprint = true;
+        }
+
+        if (avisandoSprint)
+        {
+            velocidadActual = 0f; // se planta mientras carga
+            if (parpadeo != null) parpadeo.Flash();
+        }
+
         if (!sprintando && Time.time >= tiempoParaSprint)
         {
             sprintando = true;
+            avisandoSprint = false;
             velocidadActual = velocidadMovimiento * multiplicadorSprint;
             tiempoFinSprint = Time.time + 2f; // El sprint dura 2 segundos
         }

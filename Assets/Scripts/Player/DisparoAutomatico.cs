@@ -11,6 +11,8 @@ public class DisparoAutomatico : MonoBehaviour
     private int   maxBalasSimultaneas = 1;
     private float danoBala      = 20f;
     private float velocidadBala = 10f;
+    private float probCritico   = 0f;
+    private float multCritico   = 2f;
     public  AudioClip   sonidoChute;
     public  AudioSource audioSource;
     private float siguienteDisparo = 0f;
@@ -31,7 +33,8 @@ public class DisparoAutomatico : MonoBehaviour
         {
             GameObject temp = new GameObject("PuntoDisparo");
             temp.transform.SetParent(transform);
-            temp.transform.localPosition = Vector3.zero;
+            // Spawn ligeramente elevado: si está a 0 las balas rozan el suelo.
+            temp.transform.localPosition = new Vector3(0f, 0.6f, 0f);
             puntoDisparo = temp.transform;
         }
 
@@ -57,6 +60,8 @@ public class DisparoAutomatico : MonoBehaviour
         maxBalasSimultaneas = 1 + statsCache.cantidadDirecciones;
         danoBala           = statsCache.danoProyectil;
         velocidadBala      = statsCache.velocidadProyectil;
+        probCritico        = statsCache.probabilidadCritico;
+        multCritico        = statsCache.multiplicadorCritico;
     }
 
     void DispararAEnemigos()
@@ -90,11 +95,19 @@ public class DisparoAutomatico : MonoBehaviour
             Collider objetivo = collidersBuffer[mejorIdx];
             collidersBuffer[mejorIdx] = null; // marcado como usado
 
-            Vector3 direccion = (objetivo.transform.position - puntoDisparo.position).normalized;
+            // Dirección forzada a horizontal: si no, la bala apunta hacia abajo
+            // cuando el enemigo está más bajo que el punto de disparo y atraviesa el suelo.
+            Vector3 direccion = objetivo.transform.position - puntoDisparo.position;
+            direccion.y = 0f;
+            if (direccion.sqrMagnitude < 0.0001f) continue;
+            direccion.Normalize();
+
             GameObject balaObj = ObjectPool.Instancia.Obtener(balaPrefab,
                 puntoDisparo.position, Quaternion.LookRotation(direccion));
             Bala bala = balaObj != null ? balaObj.GetComponent<Bala>() : null;
-            if (bala != null) bala.Inicializar(danoBala, velocidadBala);
+            // Tirada de crítico por bala: cada proyectil rolea independiente
+            float danoDisparo = (Random.value < probCritico) ? danoBala * multCritico : danoBala;
+            if (bala != null) bala.Inicializar(danoDisparo, velocidadBala);
 
             if (audioSource != null && sonidoChute != null)
                 audioSource.PlayOneShot(sonidoChute, volEfectos);

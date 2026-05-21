@@ -12,15 +12,24 @@ public class PlayerStats : MonoBehaviour
     public float multiplicadorExperiencia = 1f;
 
     [Header("Stats del jugador")]
-    public int vidaMaxima = 100;
+    public int vidaMaxima = 120;
     public float speed = 5.0f;
-    public float danoProyectil = 20f;
+    public float danoProyectil = 25f;
     public float rangoDisparo = 15f;
-    public float cadenciaDisparo = 5f;
+    public float cadenciaDisparo = 0.3f;
     public int cantidadDirecciones = 0;
     public float velocidadProyectil = 10f;
     public float suerte = 0f;
     public float regeneracionVida = 0f;
+
+    [Header("Críticos")]
+    [Range(0f, 1f)] public float probabilidadCritico = 0.08f;
+    public float multiplicadorCritico = 2f;
+
+    [Header("Auto-multidisparo")]
+    [Tooltip("Cada cuántos niveles sin elegir multidisparo se concede +1 bala gratis.")]
+    public int umbralAutoMultidisparo = 3;
+    [HideInInspector] public int nivelesSinMultidisparo = 0;
 
     [Header("Defensa")]
     [Tooltip("Segundos de invulnerabilidad tras recibir un golpe. 0 = sin i-frames.")]

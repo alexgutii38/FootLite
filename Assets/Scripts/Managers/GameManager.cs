@@ -123,8 +123,31 @@ public class GameManager : MonoBehaviour
         nivelCompletado = true;
         GuardarResultado(true);
         AudioManager.Instancia?.SonarVictoria();
+
+        // Fallback robusto: si nadie asignó panelVictoria (ConexionUI ausente o
+        // sin referencia en el Inspector), lo buscamos en la escena por el
+        // componente PantallaResultados, incluso si está desactivado.
+        if (panelVictoria == null)
+        {
+            PantallaResultados[] candidatos = FindObjectsByType<PantallaResultados>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (candidatos != null && candidatos.Length > 0)
+            {
+                panelVictoria = candidatos[0].gameObject;
+                Debug.Log($"[GameManager] panelVictoria no asignado; recuperado por búsqueda: {panelVictoria.name}");
+            }
+        }
+
         if (panelVictoria != null)
+        {
             panelVictoria.SetActive(true);
+            Debug.Log("[GameManager] ¡NIVEL COMPLETADO! Panel de victoria activado.");
+        }
+        else
+        {
+            Debug.LogError("[GameManager] ¡NIVEL COMPLETADO! pero no se encontró ningún panel de victoria en la escena. Añade un GameObject con PantallaResultados o asigna 'panelVictoria' en el Inspector.");
+        }
+
         PausarJuego(true);
     }
 

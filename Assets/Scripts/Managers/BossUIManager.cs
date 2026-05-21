@@ -8,6 +8,8 @@ public class BossUIManager : MonoBehaviour
 
     [Header("UI del Jefe")]
     public TextMeshProUGUI textoTemporizador;
+    [Tooltip("Panel que contiene el texto del contador. Se oculta cuando aparece el jefe o cuando muere.")]
+    public GameObject contenedorTemporizador;
     public GameObject contenedorBarraVida;
     public Slider sliderVida; // ¡Volvemos al Slider!
 
@@ -19,16 +21,24 @@ public class BossUIManager : MonoBehaviour
     private void Start()
     {
         if (contenedorBarraVida != null) contenedorBarraVida.SetActive(false);
+        // El contador empieza oculto: solo aparece cuando WaveManager empieza a llamar ActualizarTemporizador.
+        if (contenedorTemporizador != null) contenedorTemporizador.SetActive(false);
     }
 
     public void ActualizarTemporizador(float tiempoRestante)
     {
-        if (textoTemporizador != null)
+        if (tiempoRestante > 0)
         {
-            if (tiempoRestante > 0)
+            if (contenedorTemporizador != null && !contenedorTemporizador.activeSelf)
+                contenedorTemporizador.SetActive(true);
+            if (textoTemporizador != null)
                 textoTemporizador.text = "¡Jefe Final en: " + Mathf.CeilToInt(tiempoRestante) + "s!";
-            else
-                textoTemporizador.text = "";
+        }
+        else
+        {
+            // El contador llegó a 0: el jefe va a aparecer (o ya apareció), ocultamos el panel.
+            if (textoTemporizador != null) textoTemporizador.text = "";
+            if (contenedorTemporizador != null) contenedorTemporizador.SetActive(false);
         }
     }
 
@@ -50,5 +60,7 @@ public class BossUIManager : MonoBehaviour
     public void OcultarBarraVida()
     {
         if (contenedorBarraVida != null) contenedorBarraVida.SetActive(false);
+        // Por seguridad: si el contador aún estaba visible (no debería), también lo escondemos.
+        if (contenedorTemporizador != null) contenedorTemporizador.SetActive(false);
     }
 }

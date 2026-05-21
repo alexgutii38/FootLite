@@ -18,6 +18,12 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
     public int   danoPorContacto  = 10;
     public float tiempoEntreDanos = 0.5f;
     public float rangoDeteccion   = 50f;
+    [Tooltip("Distancia a la que el enemigo se planta para atacar en lugar de atravesar al jugador.")]
+    public float distanciaAtaque  = 1.2f;
+    [Tooltip("Radio de separación con otros enemigos para que no se monten encima.")]
+    public float radioSeparacion  = 0.75f;
+    [Tooltip("Fuerza con la que se separan entre sí.")]
+    public float fuerzaSeparacion = 0.25f;
 
     [Header("Futbol FX")]
     public ParticleSystem efectoMuerte;
@@ -28,6 +34,10 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
     private Rigidbody rb;
     [Header("Animación")]
     public Animator animator;
+
+    // Altura inicial bloqueada: 2.5D top-down, jamás flotan ni se hunden.
+    private float yInicial;
+    private bool  yInicialCapturada = false;
 
     // Perf: layer cacheado, timer para separación
     private LayerMask enemiesLayer;
@@ -55,6 +65,18 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
 
         parpadeo = GetComponent<ParpadeoDano>();
         if (parpadeo == null) parpadeo = gameObject.AddComponent<ParpadeoDano>();
+
+        yInicial = transform.position.y;
+        yInicialCapturada = true;
+    }
+
+    void LateUpdate()
+    {
+        if (!yInicialCapturada) return;
+        if (transform.position.y == yInicial) return;
+        Vector3 p = transform.position;
+        p.y = yInicial;
+        transform.position = p;
     }
 
     void Update()
@@ -64,6 +86,8 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
         float distancia = Vector3.Distance(transform.position, jugador.position);
         bool  enRango   = distancia <= rangoDeteccion;
 
+        bool enContacto = distancia <= distanciaAtaque;
+
         if (enRango)
         {
             Vector3 direccion = (jugador.position - transform.position).normalized;
@@ -72,7 +96,12 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
                 transform.rotation = Quaternion.Slerp(transform.rotation,
                     Quaternion.LookRotation(direccion), Time.deltaTime * 5f);
 
-            if (rb != null)
+            // Si ya está pegado al jugador, se planta a atacar (no atraviesa).
+            if (enContacto)
+            {
+                if (rb != null) rb.linearVelocity = Vector3.zero;
+            }
+            else if (rb != null)
                 rb.linearVelocity = new Vector3(direccion.x * velocidadMovimiento,
                     0f, direccion.z * velocidadMovimiento);
             else
@@ -84,7 +113,7 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
         }
 
         if (animator != null)
-            animator.SetFloat("speed", enRango ? velocidadMovimiento : 0f, 0.1f, Time.deltaTime);
+            animator.SetFloat("speed", (enRango && !enContacto) ? velocidadMovimiento : 0f, 0.1f, Time.deltaTime);
 
         // Separación: solo cada 0.1 s
         separacionTimer -= Time.deltaTime;
@@ -92,19 +121,28 @@ public class EnemigoDelantero : MonoBehaviour, IDamageable
         {
             separacionTimer = 0.1f;
 
-            int numVecinos = Physics.OverlapSphereNonAlloc(transform.position, 0.25f, bufferVecinos, enemiesLayer);
+            int numVecinos = Physics.OverlapSphereNonAlloc(transform.position, radioSeparacion, bufferVecinos, enemiesLayer);
             for (int i = 0; i < numVecinos; i++)
             {
                 Collider col = bufferVecinos[i];
                 if (col == null || col.gameObject == gameObject) continue;
-                Vector3 sep = (transform.position - col.transform.position).normalized;
-                transform.position += sep * 0.15f;
+                // sep.y = 0 obligatorio para evitar flotaciones verticales.
+                Vector3 sep = transform.position - col.transform.position;
+                sep.y = 0f;
+                if (sep.sqrMagnitude < 0.0001f) continue;
+                sep.Normalize();
+                transform.position += sep * fuerzaSeparacion;
             }
 
-            if (distancia < 1f)
+            if (distancia < distanciaAtaque)
             {
-                Vector3 dir = (transform.position - jugador.position).normalized;
-                transform.position += dir * 0.15f;
+                Vector3 dir = transform.position - jugador.position;
+                dir.y = 0f;
+                if (dir.sqrMagnitude > 0.0001f)
+                {
+                    dir.Normalize();
+                    transform.position += dir * 0.15f;
+                }
             }
         }
     }

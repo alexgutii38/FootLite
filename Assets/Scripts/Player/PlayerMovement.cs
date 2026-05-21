@@ -20,6 +20,12 @@ public class PlayerMovement : MonoBehaviour
     public float staminaRegenRate = 15f;
     private bool isExhausted = false;
 
+    // Y inicial: el juego es top-down con el jugador siempre a la misma altura.
+    // Cualquier desviación (empujes verticales, escalones, colliders) se corrige
+    // al final de cada frame para evitar tanto el vuelo como la caída del mapa.
+    private float yInicial;
+    private bool  yInicialCapturada = false;
+
     [Header("Interfaz (UI)")]
     public Slider sliderEstamina;
 
@@ -35,6 +41,9 @@ public class PlayerMovement : MonoBehaviour
         }
         ActualizarStats();
         currentStamina = maxStamina;
+
+        yInicial = transform.position.y;
+        yInicialCapturada = true;
 
         if (sliderEstamina != null)
         {
@@ -109,5 +118,20 @@ public class PlayerMovement : MonoBehaviour
     {
         if (statsCache != null)
             speed = statsCache.speed;
+    }
+
+    void LateUpdate()
+    {
+        // Bloquea la altura del jugador a la inicial. Evita que enemigos lo
+        // empujen hacia arriba (vuelo) y que se caiga del mapa si por algún
+        // motivo el CharacterController no detecta suelo.
+        if (!yInicialCapturada) return;
+        if (Mathf.Approximately(transform.position.y, yInicial)) return;
+
+        controller.enabled = false;
+        Vector3 p = transform.position;
+        p.y = yInicial;
+        transform.position = p;
+        controller.enabled = true;
     }
 }
