@@ -29,6 +29,13 @@ public class VignetteDano : MonoBehaviour
     {
         if (imagenVignette == null) return;
 
+        if (Time.timeScale == 0f)
+        {
+            alphaObjetivo = 0f;
+            SetAlpha(0f);
+            return;
+        }
+
         float alphaActual = imagenVignette.color.a;
 
         if (alphaActual < alphaObjetivo)

@@ -74,9 +74,9 @@ public class LevelUpManager : MonoBehaviour
 
     void ActualizarTextoUI()
     {
-        if (textoOpcion1 != null) textoOpcion1.text = DescribirOpcion(opciones[0]);
-        if (textoOpcion2 != null) textoOpcion2.text = DescribirOpcion(opciones[1]);
-        if (textoOpcion3 != null) textoOpcion3.text = DescribirOpcion(opciones[2]);
+        if (textoOpcion1 != null) { textoOpcion1.text = DescribirOpcion(opciones[0]); textoOpcion1.color = Color.white; }
+        if (textoOpcion2 != null) { textoOpcion2.text = DescribirOpcion(opciones[1]); textoOpcion2.color = Color.white; }
+        if (textoOpcion3 != null) { textoOpcion3.text = DescribirOpcion(opciones[2]); textoOpcion3.color = Color.white; }
 
         ColorearBoton(botonOpcion1, opciones[0].raridad);
         ColorearBoton(botonOpcion2, opciones[1].raridad);
@@ -85,16 +85,35 @@ public class LevelUpManager : MonoBehaviour
 
     void ColorearBoton(Button boton, Raridad raridad)
     {
-        if (boton == null) return;
-        Image img = boton.GetComponent<Image>();
-        if (img == null) return;
+        if (boton == null) { Debug.LogWarning("[LevelUp] boton es NULL - asígnalo en el Inspector"); return; }
 
+        Color color;
         switch (raridad)
         {
-            case Raridad.Comun:      img.color = COLOR_COMUN;      break;
-            case Raridad.Raro:       img.color = COLOR_RARO;       break;
-            case Raridad.Epico:      img.color = COLOR_EPICO;      break;
-            case Raridad.Legendario: img.color = COLOR_LEGENDARIO; break;
+            case Raridad.Raro:       color = COLOR_RARO;       break;
+            case Raridad.Epico:      color = COLOR_EPICO;      break;
+            case Raridad.Legendario: color = COLOR_LEGENDARIO; break;
+            default:                 color = COLOR_COMUN;      break;
+        }
+
+        ColorBlock cb = boton.colors;
+        cb.normalColor = color;
+        boton.colors = cb;
+
+        // Buscar la Image: primero targetGraphic, luego en el propio GO, luego en hijos
+        Image img = (boton.targetGraphic as Image)
+                 ?? boton.GetComponent<Image>()
+                 ?? boton.GetComponentInChildren<Image>();
+
+        if (img != null)
+        {
+            img.color = color;                          // color directo en la Image
+            img.CrossFadeColor(color, 0f, true, true);  // fuerza CanvasRenderer (Time.timeScale=0 safe)
+            Debug.Log($"[LevelUp] {boton.name} → {raridad} ({img.name})");
+        }
+        else
+        {
+            Debug.LogWarning($"[LevelUp] {boton.name} no tiene Image - no se puede colorear");
         }
     }
 
@@ -109,7 +128,7 @@ public class LevelUpManager : MonoBehaviour
             case Raridad.Legendario: rarNombre = "★★★ Legendario";  break;
             default:                 rarNombre = "Comun";           break;
         }
-        return $"[{rarNombre}] {op.config.nombre}\n{op.config.descripcion}";
+        return $"{op.config.nombre}\n{op.config.descripcion}";
     }
 
     float ObtenerValorPorRareza(MejoraConfig config, Raridad raridad)
